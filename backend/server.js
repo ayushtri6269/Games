@@ -22,8 +22,9 @@ mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log('MongoDB connected'))
   .catch(err => console.error('MongoDB connection error:', err));
 
-// Serve frontend static files in production
-app.use(express.static(path.join(__dirname, '../frontend/dist')));
+// Serve frontend static files from dist folder
+const distPath = path.join(__dirname, 'dist');
+app.use(express.static(distPath));
 
 // API Routes
 app.get('/api/test', (req, res) => {
@@ -32,7 +33,7 @@ app.get('/api/test', (req, res) => {
 
 // Serve index.html for all other routes (SPA support)
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../frontend/dist/index.html'));
+  res.sendFile(path.join(distPath, 'index.html'));
 });
 
 app.listen(PORT, () => {
