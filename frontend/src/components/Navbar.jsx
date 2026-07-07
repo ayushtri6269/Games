@@ -14,16 +14,76 @@ const NAV_ITEMS = [
     accent: "#40e0f0",
   },
   {
-    id: "periodicTable",
-    path: "/periodic-table",
-    title: "Element → (Z, W)",
-    accent: "#f59e0b",
+    id: "cube",
+    path: "/cube",
+    title: "Cube Quiz",
+    accent: "#a78bfa",
   },
   {
     id: "stateCapital",
     path: "/state-capital",
     title: "State Capital Quiz",
     accent: "#fb7185",
+  },
+  {
+    id: "worldCapital",
+    path: "/world-capital",
+    title: "World Capital Quiz",
+    accent: "#34d399",
+  },
+  {
+    id: "periodicTable",
+    path: "/periodic-table",
+    title: "Periodic Table Quiz",
+    accent: "#f59e0b",
+  },
+  {
+    id: "multiplication",
+    path: "/multiplication",
+    title: "Multiplication Quiz",
+    accent: "#22c55e",
+  },
+  {
+    id: "reverseAlphabet",
+    path: "/reverse-alphabet",
+    title: "Reverse Alphabet Quiz",
+    accent: "#f472b6",
+  },
+  {
+    id: "prime",
+    path: "/prime",
+    title: "Prime Number Quiz",
+    accent: "#38bdf8",
+  },
+  {
+    id: "roman",
+    path: "/roman",
+    title: "Roman Numerals Quiz",
+    accent: "#facc15",
+  },
+  {
+    id: "countryCurrency",
+    path: "/country-currency",
+    title: "Country Currency Quiz",
+    accent: "#2dd4bf",
+  },
+  {
+    id: "elementSymbol",
+    path: "/element-symbol",
+    title: "Element Symbol Quiz",
+    accent: "#fb923c",
+  },
+  {
+    id: "oneWordSub",
+    path: "/one-word-sub",
+    title: "One Word Substitution",
+    accent: "#c084fc",
+  },
+  {
+    id: "indianPresident",
+    path: "/indian-president",
+    title: "Indian Presidents",
+    accent: "#f97316",
   },
   {
     id: "football",
@@ -34,20 +94,8 @@ const NAV_ITEMS = [
   {
     id: "leaderboard",
     path: "/leaderboard",
-    title: "🏆 Leaderboard",
+    title: "Leaderboard",
     accent: "#f0e040",
-  },
-  {
-    id: "oneWordSub",
-    path: "/one-word-sub",
-    title: "OWS",
-    accent: "#c084fc",
-  },
-  {
-    id: "indianPresident",
-    path: "/indian-president",
-    title: "IND Presidents",
-    accent: "#f97316",
   },
 ];
 
