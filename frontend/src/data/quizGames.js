@@ -242,9 +242,10 @@ export const quizGames = {
     cardBadge: "Memory",
     cardTitle: "Alphabet Quiz",
     cardDescription: "Identify letter positions instantly.",
-    getScorePoints: (elapsedSec) => {
-      if (elapsedSec < 1) return 12;
-      if (elapsedSec < 2) return 8;
+    getScorePoints: (elapsedSec, timeLimitMs) => {
+      const third = (timeLimitMs || 3000) / 3000;
+      if (elapsedSec < third) return 12;
+      if (elapsedSec < third * 2) return 8;
       return 4;
     },
     generateQuestion: () => {
@@ -272,9 +273,10 @@ export const quizGames = {
     cardBadge: "Quant",
     cardTitle: "Square Quiz",
     cardDescription: "Squares of numbers from 1 to 100.",
-    getScorePoints: (elapsedSec) => {
-      if (elapsedSec < 1.5) return 12;
-      if (elapsedSec < 3.0) return 8;
+    getScorePoints: (elapsedSec, timeLimitMs) => {
+      const third = (timeLimitMs || 5000) / 3000;
+      if (elapsedSec < third) return 12;
+      if (elapsedSec < third * 2) return 8;
       return 4;
     },
     generateQuestion: () => {
@@ -302,9 +304,10 @@ export const quizGames = {
     cardBadge: "GK Memory",
     cardTitle: "State Capital Quiz",
     cardDescription: "Indian state capitals at exam speed.",
-    getScorePoints: (elapsedSec) => {
-      if (elapsedSec < 1) return 12;
-      if (elapsedSec < 2) return 8;
+    getScorePoints: (elapsedSec, timeLimitMs) => {
+      const third = (timeLimitMs || 3000) / 3000;
+      if (elapsedSec < third) return 12;
+      if (elapsedSec < third * 2) return 8;
       return 4;
     },
     generateQuestion: () => {
@@ -314,6 +317,67 @@ export const quizGames = {
         display: question.state,
         correctValue: question.capital,
         options: generateCapitalOptions(question.capital),
+      };
+    },
+  },
+  worldCapital: {
+    key: "worldCapital",
+    title: "World Capital Quiz",
+    bigLetter: "🌍",
+    intro: "Name the capital of every country on Earth.",
+    rules: "wrong = game over",
+    reference: "All 195 countries — from Afghanistan to Zimbabwe.",
+    accent: "#34d399",
+    timeLimit: 6000,
+    prompt: "Capital of",
+    subtext: "Choose the correct capital city",
+    cardBadge: "🌍 World GK",
+    cardTitle: "World Capital Quiz",
+    cardDescription: "All 195 countries — test your world knowledge.",
+    getScorePoints: (elapsedSec, timeLimitMs) => {
+      const third = (timeLimitMs || 6000) / 3000;
+      if (elapsedSec < third) return 12;
+      if (elapsedSec < third * 2) return 8;
+      return 4;
+    },
+    generateQuestion: () => {
+      const question = worldCapitals[Math.floor(Math.random() * worldCapitals.length)];
+
+      return {
+        display: question.country,
+        correctValue: question.capital,
+        options: generateWorldCapitalOptions(question.capital),
+      };
+    },
+  },
+  cube: {
+    key: "cube",
+    title: "Cube Quiz",
+    bigLetter: "X³",
+    intro: "Cubes of numbers from 1 to 30.",
+    rules: "wrong = game over",
+    reference: "Practice cubes of numbers from 1 to 30.",
+    accent: "#a78bfa",
+    timeLimit: 6000,
+    prompt: "What is the cube of",
+    subtext: "?",
+    cardBadge: "Quant",
+    cardTitle: "Cube Quiz",
+    cardDescription: "Cubes of numbers from 1 to 30.",
+    getScorePoints: (elapsedSec, timeLimitMs) => {
+      const third = (timeLimitMs || 6000) / 3000;
+      if (elapsedSec < third) return 12;
+      if (elapsedSec < third * 2) return 8;
+      return 4;
+    },
+    generateQuestion: () => {
+      const num = Math.floor(Math.random() * 30) + 1;
+      const correct = num * num * num;
+
+      return {
+        display: num,
+        correctValue: correct,
+        options: generateCubeOptions(correct, num),
       };
     },
   },
@@ -392,3 +456,50 @@ function generateCapitalOptions(correctCapital) {
 
   return shuffleArray([...options]);
 }
+
+function generateWorldCapitalOptions(correctCapital) {
+  const options = new Set([correctCapital]);
+  const capitals = shuffleArray(worldCapitals.map((item) => item.capital));
+
+  for (const capital of capitals) {
+    if (options.size >= 4) break;
+    options.add(capital);
+  }
+
+  return shuffleArray([...options]);
+}
+
+function generateCubeOptions(correct, originalNum) {
+  const options = new Set([correct]);
+  const wrongAnswers = [
+    (originalNum - 1) * (originalNum - 1) * (originalNum - 1),
+    (originalNum + 1) * (originalNum + 1) * (originalNum + 1),
+    correct + 10,
+    correct - 10,
+    correct + 100,
+    correct - 100,
+    correct + 1000,
+    correct - 1000,
+    originalNum * originalNum * originalNum + originalNum,
+    correct + Math.floor(Math.random() * 150),
+    correct - Math.floor(Math.random() * 150),
+  ].filter((value) => value > 0 && value !== correct);
+
+  for (const wrongAnswer of shuffleArray(wrongAnswers)) {
+    if (options.size >= 4) break;
+    options.add(wrongAnswer);
+  }
+
+  while (options.size < 4) {
+    let fallback = correct + Math.floor(Math.random() * 200) * (Math.random() > 0.5 ? 1 : -1);
+
+    if (fallback <= 0) {
+      fallback = correct + 20;
+    }
+
+    options.add(fallback);
+  }
+
+  return shuffleArray([...options]);
+}
+

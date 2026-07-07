@@ -1,5 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { getCookie, setCookie, GUEST_COOKIE_NAME } from "../utils/cookies";
+import {
+  getLeaderboard,
+  saveScore,
+  getTimeAgo,
+  DIFFICULTIES,
+  MODE_LABELS,
+  DIFF_LABELS,
+} from "../utils/leaderboard";
 
 const OPTION_KEYS = ["A", "B", "C", "D"];
 
@@ -9,11 +19,29 @@ export default function QuizGame({ game }) {
   const advanceTimeoutRef = useRef(null);
   const endTimeoutRef = useRef(null);
 
-  const [screen, setScreen] = useState("start");
+  const currentUser = useSelector((state) => state.auth.currentUser);
+
+  // Guest name state
+  const [guestName, setGuestName] = useState(() => {
+    if (currentUser) return currentUser.name;
+    return getCookie(GUEST_COOKIE_NAME) || "";
+  });
+  const [guestInput, setGuestInput] = useState("");
+
+  // Difficulty
+  const [difficulty, setDifficulty] = useState("intermediate");
+
+  // Screens: guest → difficulty → game → end
+  const [screen, setScreen] = useState(() => {
+    if (currentUser) return "difficulty";
+    if (getCookie(GUEST_COOKIE_NAME)) return "difficulty";
+    return "guest";
+  });
+
   const [score, setScore] = useState(0);
   const [questionNum, setQuestionNum] = useState(0);
   const [streak, setStreak] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(game.timeLimit / 1000);
+  const [timeLeft, setTimeLeft] = useState(6);
   const [isAnswered, setIsAnswered] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState(null);
   const [feedbackText, setFeedbackText] = useState("");
@@ -23,18 +51,19 @@ export default function QuizGame({ game }) {
     correct: null,
   });
   const [finalMessage, setFinalMessage] = useState("");
+  const [gameEndReason, setGameEndReason] = useState("");
+
+  const activeTimeLimit = DIFFICULTIES[difficulty].timeMs;
 
   const clearTimers = useCallback(() => {
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
-
     if (advanceTimeoutRef.current) {
       clearTimeout(advanceTimeoutRef.current);
       advanceTimeoutRef.current = null;
     }
-
     if (endTimeoutRef.current) {
       clearTimeout(endTimeoutRef.current);
       endTimeoutRef.current = null;
@@ -45,6 +74,15 @@ export default function QuizGame({ game }) {
     return () => clearTimers();
   }, [clearTimers]);
 
+  // ── Guest login ──
+  const handleGuestLogin = () => {
+    const name = guestInput.trim() || `Guest_${Math.floor(Math.random() * 9000 + 1000)}`;
+    setCookie(GUEST_COOKIE_NAME, name, 7);
+    setGuestName(name);
+    setScreen("difficulty");
+  };
+
+  // ── Game logic ──
   const buildFinalMessage = useCallback((reason, currentScore) => {
     if (reason === "quit") return "You quit. 🏳️";
     if (reason === "wrong") return "Wrong answer! 💥";
@@ -59,32 +97,45 @@ export default function QuizGame({ game }) {
     (reason) => {
       clearTimers();
       setIsAnswered(true);
+      setGameEndReason(reason);
       setFinalMessage(buildFinalMessage(reason, score));
+
+      // Save to leaderboard
+      const answeredQs = reason === "wrong" || reason === "timeout" ? questionNum - 1 : questionNum;
+      if (score > 0) {
+        saveScore({
+          name: guestName,
+          score,
+          mode: game.key,
+          difficulty,
+          questions: answeredQs,
+        });
+      }
+
       setScreen("end");
     },
-    [buildFinalMessage, clearTimers, score],
+    [buildFinalMessage, clearTimers, score, guestName, game.key, difficulty, questionNum],
   );
 
   const nextQuestion = useCallback(() => {
     clearTimers();
-
     const question = game.generateQuestion();
     setCurrentQuestion(question);
-    setQuestionNum((value) => value + 1);
+    setQuestionNum((v) => v + 1);
     setIsAnswered(false);
     setFeedbackText("");
     setFeedbackTone("neutral");
     setResultState({ selected: null, correct: null });
-    setTimeLeft(game.timeLimit / 1000);
+    setTimeLeft(activeTimeLimit / 1000);
 
     const startedAt = Date.now();
 
     timerRef.current = setInterval(() => {
       const elapsed = Date.now() - startedAt;
-      const remaining = Math.max(0, (game.timeLimit - elapsed) / 1000);
+      const remaining = Math.max(0, (activeTimeLimit - elapsed) / 1000);
       setTimeLeft(remaining);
 
-      if (elapsed >= game.timeLimit) {
+      if (elapsed >= activeTimeLimit) {
         clearTimers();
         setIsAnswered(true);
         setStreak(0);
@@ -97,7 +148,7 @@ export default function QuizGame({ game }) {
         }, 1400);
       }
     }, 50);
-  }, [clearTimers, endGame, game]);
+  }, [clearTimers, endGame, game, activeTimeLimit]);
 
   const startGame = () => {
     clearTimers();
@@ -105,6 +156,7 @@ export default function QuizGame({ game }) {
     setQuestionNum(0);
     setStreak(0);
     setFinalMessage("");
+    setGameEndReason("");
     setScreen("game");
     nextQuestion();
   };
@@ -116,74 +168,51 @@ export default function QuizGame({ game }) {
       clearTimers();
       setIsAnswered(true);
 
-      const elapsed = game.timeLimit / 1000 - timeLeft;
+      const elapsed = activeTimeLimit / 1000 - timeLeft;
       const isCorrect = choice === currentQuestion.correctValue;
 
       if (isCorrect) {
-        const points = game.getScorePoints(elapsed);
+        const points = game.getScorePoints(elapsed, activeTimeLimit);
         const nextScore = score + points;
         const nextStreak = streak + 1;
 
         setScore(nextScore);
         setStreak(nextStreak);
         setFeedbackTone("success");
-        setResultState({
-          selected: choice,
-          correct: currentQuestion.correctValue,
-        });
+        setResultState({ selected: choice, correct: currentQuestion.correctValue });
         setFeedbackText(
           nextStreak >= 3
             ? `🔥 ${nextStreak}x streak! +${points}pts`
             : `+${points} pts`,
         );
-
-        advanceTimeoutRef.current = setTimeout(() => {
-          nextQuestion();
-        }, 1200);
+        advanceTimeoutRef.current = setTimeout(() => nextQuestion(), 1200);
         return;
       }
 
       setStreak(0);
       setFeedbackTone("danger");
-      setResultState({
-        selected: choice,
-        correct: currentQuestion.correctValue,
-      });
+      setResultState({ selected: choice, correct: currentQuestion.correctValue });
       setFeedbackText(`✗ It was ${currentQuestion.correctValue} — Game Over!`);
-
-      endTimeoutRef.current = setTimeout(() => {
-        endGame("wrong");
-      }, 1400);
+      endTimeoutRef.current = setTimeout(() => endGame("wrong"), 1400);
     },
-    [
-      currentQuestion,
-      endGame,
-      clearTimers,
-      game,
-      isAnswered,
-      nextQuestion,
-      screen,
-      score,
-      streak,
-      timeLeft,
-    ],
+    [currentQuestion, endGame, clearTimers, game, isAnswered, nextQuestion, screen, score, streak, timeLeft, activeTimeLimit],
   );
 
+  // Keyboard handler
   useEffect(() => {
     if (screen !== "game" || isAnswered || !currentQuestion) return undefined;
-
     const handler = (event) => {
       const index = ["a", "b", "c", "d"].indexOf(event.key.toLowerCase());
       if (index >= 0 && currentQuestion.options[index] !== undefined) {
         handleChoice(currentQuestion.options[index]);
       }
     };
-
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [screen, isAnswered, currentQuestion, handleChoice]);
 
-  const timerPercent = Math.max(0, (timeLeft / (game.timeLimit / 1000)) * 100);
+  const timerPercent = Math.max(0, (timeLeft / (activeTimeLimit / 1000)) * 100);
+
   const feedbackClass =
     feedbackTone === "success"
       ? "text-[#40f080]"
@@ -193,27 +222,87 @@ export default function QuizGame({ game }) {
 
   const selectedClass = (choice) => {
     if (!currentQuestion) return "";
-
     if (choice === resultState.correct && isAnswered) {
       return "border-[#40f080] bg-[#40f080]/10 text-[#40f080] shadow-[0_0_20px_rgba(64,240,128,0.18)]";
     }
-
-    if (
-      choice === resultState.selected &&
-      isAnswered &&
-      resultState.selected !== resultState.correct
-    ) {
+    if (choice === resultState.selected && isAnswered && resultState.selected !== resultState.correct) {
       return "border-[#f04060] bg-[#f04060]/10 text-[#f04060] shadow-[0_0_20px_rgba(240,64,96,0.18)]";
     }
-
     return "";
   };
 
-  if (screen === "start") {
+  // ════════════════════════════════════════
+  //  GUEST LOGIN SCREEN
+  // ════════════════════════════════════════
+  if (screen === "guest") {
     return (
       <main className="mx-auto flex min-h-[calc(100vh-120px)] max-w-5xl items-center px-4 py-10 sm:px-6 lg:px-8">
         <section className="w-full rounded-[2rem] border border-white/10 bg-white/5 p-6 shadow-[0_30px_120px_rgba(15,23,42,0.35)] backdrop-blur-xl sm:p-8">
           <div className="text-center">
+            <div className="mb-4 text-6xl">🎮</div>
+            <div className="mb-4 text-5xl font-black uppercase tracking-[0.2em] text-white">
+              {game.bigLetter}
+            </div>
+            <h1 className="text-3xl font-black text-white sm:text-4xl">
+              Play as Guest
+            </h1>
+            <p className="mt-4 text-sm text-slate-400 uppercase tracking-[0.2em]">
+              Enter a name to track your scores
+            </p>
+
+            <div className="mx-auto mt-8 max-w-xs">
+              <input
+                type="text"
+                value={guestInput}
+                onChange={(e) => setGuestInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleGuestLogin()}
+                placeholder="Your name..."
+                maxLength={16}
+                autoFocus
+                className="w-full rounded-xl border border-white/15 bg-black/30 px-5 py-4 text-center font-mono text-lg text-white tracking-[0.15em] placeholder-slate-500 outline-none transition focus:border-[#f0e040]/60 focus:shadow-[0_0_20px_rgba(240,224,64,0.12)]"
+              />
+            </div>
+
+            <button
+              onClick={handleGuestLogin}
+              className="mt-6 rounded-full border border-[#f0e040]/60 bg-[#f0e040]/10 px-8 py-3 text-sm font-bold uppercase tracking-[0.25em] text-[#f0e040] transition hover:bg-[#f0e040]/20"
+            >
+              Play as Guest
+            </button>
+
+            <p className="mt-4 text-xs text-slate-500 tracking-[0.15em]">
+              Your name is saved for 7 days via cookie
+            </p>
+
+            <button
+              onClick={() => navigate("/")}
+              className="mt-4 rounded-full border border-white/10 bg-white/5 px-5 py-2 text-xs font-bold uppercase tracking-[0.25em] text-slate-400 transition hover:bg-white/10"
+            >
+              ← Back to Menu
+            </button>
+          </div>
+        </section>
+      </main>
+    );
+  }
+
+  // ════════════════════════════════════════
+  //  DIFFICULTY SELECTION SCREEN
+  // ════════════════════════════════════════
+  if (screen === "difficulty") {
+    const diffOptions = [
+      { key: "beginner", icon: "🌱", label: "Beginner", time: "9 sec" },
+      { key: "intermediate", icon: "⚡", label: "Intermediate", time: "6 sec" },
+      { key: "advanced", icon: "🔥", label: "Advanced", time: "3 sec" },
+    ];
+
+    return (
+      <main className="mx-auto flex min-h-[calc(100vh-120px)] max-w-5xl items-center px-4 py-10 sm:px-6 lg:px-8">
+        <section className="w-full rounded-[2rem] border border-white/10 bg-white/5 p-6 shadow-[0_30px_120px_rgba(15,23,42,0.35)] backdrop-blur-xl sm:p-8">
+          <div className="text-center">
+            <div className="mb-2 text-xs uppercase tracking-[0.3em] text-slate-500">
+              Player: <span className="text-[#f0e040]">{guestName}</span>
+            </div>
             <div className="mb-4 text-5xl font-black uppercase tracking-[0.2em] text-white sm:text-6xl">
               {game.bigLetter}
             </div>
@@ -221,13 +310,40 @@ export default function QuizGame({ game }) {
               {game.title}
             </h1>
             <p className="mt-4 text-lg text-slate-300">{game.intro}</p>
-            <p className="mt-4 text-sm uppercase tracking-[0.3em] text-[#404070]">
+
+            <p className="mt-6 text-sm uppercase tracking-[0.3em] text-slate-500">
+              Select Difficulty
+            </p>
+
+            <div className="mx-auto mt-4 grid max-w-md gap-3 sm:grid-cols-3">
+              {diffOptions.map((d) => (
+                <button
+                  key={d.key}
+                  onClick={() => setDifficulty(d.key)}
+                  className={`rounded-xl border p-5 text-center transition duration-200 hover:-translate-y-1 ${
+                    difficulty === d.key
+                      ? "border-[#f0e040]/60 bg-[#f0e040]/10 shadow-[0_0_20px_rgba(240,224,64,0.12)]"
+                      : "border-white/10 bg-white/5 hover:border-white/20"
+                  }`}
+                >
+                  <div className="text-3xl">{d.icon}</div>
+                  <div className="mt-2 text-sm font-bold uppercase tracking-[0.2em] text-white">
+                    {d.label}
+                  </div>
+                  <div className="mt-1 text-xs uppercase tracking-[0.2em] text-slate-500">
+                    {d.time}
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            <p className="mt-5 text-sm uppercase tracking-[0.3em] text-[#404070]">
               {game.rules}
             </p>
-            <div className="mt-8 flex flex-wrap justify-center gap-4">
+            <div className="mt-6 flex flex-wrap justify-center gap-4">
               <button
                 onClick={startGame}
-                className="rounded-full border border-[#f0e040]/60 bg-[#f0e040]/10 px-6 py-3 text-sm font-bold uppercase tracking-[0.25em] text-[#f0e040] transition hover:bg-[#f0e040]/15"
+                className="rounded-full border border-[#f0e040]/60 bg-[#f0e040]/10 px-8 py-3 text-sm font-bold uppercase tracking-[0.25em] text-[#f0e040] transition hover:bg-[#f0e040]/20"
               >
                 Start
               </button>
@@ -238,7 +354,7 @@ export default function QuizGame({ game }) {
                 Menu
               </button>
             </div>
-            <div className="mt-8 text-sm uppercase tracking-[0.2em] text-slate-500">
+            <div className="mt-6 text-xs uppercase tracking-[0.15em] text-slate-600">
               {game.reference}
             </div>
           </div>
@@ -247,7 +363,19 @@ export default function QuizGame({ game }) {
     );
   }
 
+  // ════════════════════════════════════════
+  //  END SCREEN + LEADERBOARD
+  // ════════════════════════════════════════
   if (screen === "end") {
+    const diffInfo = DIFFICULTIES[difficulty];
+    const answeredQs = gameEndReason === "wrong" || gameEndReason === "timeout" ? questionNum - 1 : questionNum;
+
+    // Get leaderboard for this mode + difficulty
+    const lbEntries = getLeaderboard()
+      .filter((e) => e.mode === game.key && e.difficulty === difficulty)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 10);
+
     return (
       <main className="mx-auto flex min-h-[calc(100vh-120px)] max-w-5xl items-center px-4 py-10 sm:px-6 lg:px-8">
         <section className="w-full rounded-[2rem] border border-white/10 bg-white/5 p-6 text-center shadow-[0_30px_120px_rgba(15,23,42,0.35)] backdrop-blur-xl sm:p-8">
@@ -259,10 +387,59 @@ export default function QuizGame({ game }) {
             {score}
           </div>
           <p className="text-lg text-slate-200">{finalMessage}</p>
+          <p className="mt-2 text-sm text-slate-500 uppercase tracking-[0.2em]">
+            {diffInfo.icon} {diffInfo.label} · {answeredQs} correct
+          </p>
+
+          {/* Leaderboard */}
+          <div className="mt-8 rounded-2xl border border-white/10 bg-black/20 p-5">
+            <p className="mb-4 text-xs uppercase tracking-[0.3em] text-[#f0e040]">
+              🏆 Leaderboard — {MODE_LABELS[game.key] || game.key} · {diffInfo.label}
+            </p>
+            {lbEntries.length === 0 ? (
+              <p className="py-4 text-sm text-slate-500 tracking-[0.15em]">
+                No scores yet. Be the first!
+              </p>
+            ) : (
+              <div className="max-h-60 overflow-y-auto">
+                <table className="w-full text-left text-xs">
+                  <thead>
+                    <tr className="border-b border-white/10 text-slate-500 uppercase tracking-[0.2em]">
+                      <th className="pb-2 pr-2">#</th>
+                      <th className="pb-2 pr-2">Player</th>
+                      <th className="pb-2 pr-2">Info</th>
+                      <th className="pb-2 text-right">Score</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {lbEntries.map((entry, i) => (
+                      <tr key={i} className="border-b border-white/5 hover:bg-white/[0.02]">
+                        <td className="py-2 pr-2 text-lg font-black" style={{
+                          color: i === 0 ? '#ffd700' : i === 1 ? '#c0c0c0' : i === 2 ? '#cd7f32' : '#6060a0'
+                        }}>
+                          {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1}
+                        </td>
+                        <td className="py-2 pr-2 font-bold text-white max-w-[100px] truncate">
+                          {entry.name}
+                        </td>
+                        <td className="py-2 pr-2 text-slate-500">
+                          {entry.questions || "?"}Q · {getTimeAgo(entry.timestamp)}
+                        </td>
+                        <td className="py-2 text-right text-lg font-black text-[#40e0f0]">
+                          {entry.score}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+
           <div className="mt-8 flex flex-wrap justify-center gap-4">
             <button
-              onClick={startGame}
-              className="rounded-full border border-[#f0e040]/60 bg-[#f0e040]/10 px-6 py-3 text-sm font-bold uppercase tracking-[0.25em] text-[#f0e040] transition hover:bg-[#f0e040]/15"
+              onClick={() => setScreen("difficulty")}
+              className="rounded-full border border-[#f0e040]/60 bg-[#f0e040]/10 px-6 py-3 text-sm font-bold uppercase tracking-[0.25em] text-[#f0e040] transition hover:bg-[#f0e040]/20"
             >
               Play Again
             </button>
@@ -278,6 +455,9 @@ export default function QuizGame({ game }) {
     );
   }
 
+  // ════════════════════════════════════════
+  //  GAME SCREEN
+  // ════════════════════════════════════════
   return (
     <main className="mx-auto max-w-5xl px-4 pb-16 pt-8 sm:px-6 lg:px-8">
       <section className="rounded-[2rem] border border-white/10 bg-white/5 p-6 shadow-[0_30px_120px_rgba(15,23,42,0.35)] backdrop-blur-xl sm:p-8">
@@ -285,24 +465,30 @@ export default function QuizGame({ game }) {
           <div className="text-sm uppercase tracking-[0.35em] text-[#f0e040]">
             {game.title}
           </div>
-          <div className="flex gap-6 text-sm uppercase tracking-[0.25em] text-slate-400">
-            <div>
-              Score <span className="text-white">{score}</span>
+          <div className="text-right">
+            <div className="mb-1 text-[10px] uppercase tracking-[0.2em] text-slate-500">
+              {guestName} · {DIFFICULTIES[difficulty].icon} {DIFF_LABELS[difficulty]}
             </div>
-            <div>
-              Q <span className="text-white">{questionNum}</span>
+            <div className="flex gap-6 text-sm uppercase tracking-[0.25em] text-slate-400">
+              <div>
+                Score <span className="text-white">{score}</span>
+              </div>
+              <div>
+                Q <span className="text-white">{questionNum}</span>
+              </div>
             </div>
           </div>
         </div>
 
+        {/* Timer */}
         <div className="mt-5">
           <div className="relative h-2 overflow-hidden rounded-full bg-white/10">
             <div
               className="h-full rounded-full transition-[width] duration-75"
               style={{
                 width: `${timerPercent}%`,
-                background: game.accent,
-                boxShadow: `0 0 12px ${game.accent}`,
+                background: timerPercent < 33 ? '#f04060' : game.accent,
+                boxShadow: `0 0 12px ${timerPercent < 33 ? '#f04060' : game.accent}`,
               }}
             />
           </div>
@@ -311,11 +497,16 @@ export default function QuizGame({ game }) {
           </div>
         </div>
 
+        {/* Question */}
         <div className="mt-8 rounded-[1.5rem] border border-white/10 bg-black/20 p-8 text-center">
           <div className="text-xs uppercase tracking-[0.35em] text-slate-500">
             {game.prompt}
           </div>
-          <div className="mt-4 text-7xl font-black text-white sm:text-8xl">
+          <div className={`mt-4 font-black text-white ${
+            game.key === 'worldCapital' || game.key === 'stateCapital'
+              ? 'text-3xl sm:text-4xl leading-tight'
+              : 'text-7xl sm:text-8xl'
+          }`}>
             {currentQuestion?.display}
           </div>
           <div className="mt-4 text-sm uppercase tracking-[0.3em] text-slate-400">
@@ -323,9 +514,9 @@ export default function QuizGame({ game }) {
           </div>
         </div>
 
+        {/* Options */}
         <div className="mt-6 grid gap-3 sm:grid-cols-2">
           {currentQuestion?.options.map((choice, index) => {
-            const isCorrect = choice === currentQuestion.correctValue;
             const statusClass = selectedClass(choice);
 
             return (
@@ -339,27 +530,21 @@ export default function QuizGame({ game }) {
                 <span className="absolute left-3 top-2 text-[10px] uppercase tracking-[0.25em] text-slate-500">
                   {OPTION_KEYS[index]}
                 </span>
-                <span
-                  className={isCorrect && isAnswered ? "text-[#40f080]" : ""}
-                >
-                  {choice}
-                </span>
+                {choice}
               </button>
             );
           })}
         </div>
 
-        <div
-          className={`mt-6 min-h-6 text-center text-sm uppercase tracking-[0.3em] ${feedbackClass}`}
-        >
+        {/* Feedback */}
+        <div className={`mt-6 min-h-6 text-center text-sm uppercase tracking-[0.3em] ${feedbackClass}`}>
           {feedbackText}
         </div>
 
+        {/* Quit */}
         <div className="mt-5 flex justify-center">
           <button
-            onClick={() => {
-              endGame("quit");
-            }}
+            onClick={() => endGame("quit")}
             className="rounded-full border border-white/15 bg-white/5 px-5 py-2 text-xs font-bold uppercase tracking-[0.3em] text-slate-400 transition hover:bg-white/10"
           >
             Quit

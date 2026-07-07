@@ -15,6 +15,8 @@ import AuthPage from "./pages/AuthPage";
 import AlphabetQuiz from "./pages/AlphabetQuiz";
 import SquareQuiz from "./pages/SquareQuiz";
 import StateCapitalQuiz from "./pages/StateCapitalQuiz";
+import WorldCapitalQuiz from "./pages/WorldCapitalQuiz";
+import CubeQuiz from "./pages/CubeQuiz";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 
@@ -46,6 +48,19 @@ const GAME_MODES = [
     details: "A quick mental math mode with a cyan arcade accent.",
   },
   {
+    id: "cube",
+    path: "/cube",
+    title: "Cube Quiz",
+    badge: "Quant",
+    hero: "X³",
+    intro: "Cubes of numbers from 1 to 30.",
+    rules: "wrong = game over",
+    reference: "Practice cubes of numbers from 1 to 30.",
+    accent: "#a78bfa",
+    summary: "What is the cube of the number?",
+    details: "A challenging cube calculations mode with a purple arcade accent.",
+  },
+  {
     id: "stateCapital",
     path: "/state-capital",
     title: "State Capital Quiz",
@@ -57,6 +72,19 @@ const GAME_MODES = [
     accent: "#fb7185",
     summary: "Find the capital of the state. ",
     details: "A general knowledge memory test with a pink accent.",
+  },
+  {
+    id: "worldCapital",
+    path: "/world-capital",
+    title: "World Capital Quiz",
+    badge: "🌍 World GK",
+    hero: "🌍",
+    intro: "All 195 countries — test your world knowledge.",
+    rules: "wrong = game over",
+    reference: "All 195 countries — from Afghanistan to Zimbabwe.",
+    accent: "#34d399",
+    summary: "Name the capital of every country on Earth.",
+    details: "A comprehensive world geography quiz with an emerald accent.",
   },
 ];
 
@@ -208,7 +236,7 @@ function HomePage({ darkMode, currentUser, message }) {
 
           <div className="mt-6 grid gap-3 sm:grid-cols-3">
             {[
-              { label: "Modes", value: "3 + football", accent: "#f0e040" },
+              { label: "Modes", value: "5 + football", accent: "#f0e040" },
               { label: "Palette", value: "Neon arc", accent: "#40e0f0" },
               { label: "Storage", value: "Local auth", accent: "#fb7185" },
             ].map((item) => (
@@ -295,7 +323,9 @@ function ArcadeLayout() {
           />
           <Route path="/alphabet" element={<AlphabetQuiz />} />
           <Route path="/square" element={<SquareQuiz />} />
+          <Route path="/cube" element={<CubeQuiz />} />
           <Route path="/state-capital" element={<StateCapitalQuiz />} />
+          <Route path="/world-capital" element={<WorldCapitalQuiz />} />
           <Route
             path="*"
             element={
