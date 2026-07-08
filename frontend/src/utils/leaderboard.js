@@ -93,6 +93,7 @@ export const MODE_LABELS = {
   indianVicePresident: 'IND VP',
   nationalOfficials: 'Nat Off',
   stateOfficials: 'State CM',
+  diseaseCause: 'Disease',
 };
 
 export const DIFF_LABELS = {

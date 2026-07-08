@@ -28,6 +28,7 @@ import IndianPresidentQuiz from "./pages/IndianPresidentQuiz";
 import IndianVicePresidentQuiz from "./pages/IndianVicePresidentQuiz";
 import NationalOfficialsQuiz from "./pages/NationalOfficialsQuiz";
 import StateOfficialsQuiz from "./pages/StateOfficialsQuiz";
+import DiseaseCauseQuiz from "./pages/DiseaseCauseQuiz";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import Leaderboard from "./pages/Leaderboard";
@@ -65,6 +66,20 @@ const GAME_MODES = [
     accent: "#ef4444",
     summary: "Who is the Chief Minister of...",
     details: "Match the state to its current CM.",
+  },
+  {
+    id: "diseaseCause",
+    path: "/disease-cause",
+    title: "Disease → Cause",
+    badge: "Biology",
+    category: "Biology",
+    hero: "🦠",
+    intro: "What causes this disease — virus, bacteria, fungus, or protozoa?",
+    rules: "<1s = 12pts · <2s = 8pts · <3s = 4pts · wrong = over",
+    reference: "50 important diseases and their causative organisms.",
+    accent: "#10b981",
+    summary: "What causes...",
+    details: "Match diseases to their causative organisms.",
   },
   {
     id: "alphabet",
@@ -671,6 +686,7 @@ function ArcadeLayout() {
           <Route path="/indian-president" element={<IndianPresidentQuiz />} />
           <Route path="/national-officials" element={<NationalOfficialsQuiz />} />
           <Route path="/state-officials" element={<StateOfficialsQuiz />} />
+          <Route path="/disease-cause" element={<DiseaseCauseQuiz />} />
 
           <Route
             path="/indian-vice-president"

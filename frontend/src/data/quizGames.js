@@ -665,6 +665,15 @@ export const generateStateCmOptions = (correct) => {
   return shuffleArray(Array.from(options));
 };
 
+
+export const generateDiseaseCauseOptions = (correct) => {
+  const options = new Set([correct]);
+  while (options.size < 4) {
+    options.add(diseaseCauses[Math.floor(Math.random() * diseaseCauses.length)].cause);
+  }
+  return shuffleArray(Array.from(options));
+};
+
 export const quizGames = {
   alphabet: {
     key: "alphabet",
@@ -1189,6 +1198,35 @@ export const quizGames = {
       };
     },
   },
+  diseaseCause: {
+    key: "diseaseCause",
+    title: "Disease → Cause",
+    bigLetter: "🦠",
+    intro: "What causes this disease — virus, bacteria, fungus, or protozoa?",
+    rules: "<1s = 12pts · <2s = 8pts · <3s = 4pts · wrong = over",
+    reference: "50 important diseases and their causative organisms.",
+    accent: "#10b981",
+    timeLimit: 6000,
+    prompt: "What causes",
+    subtext: "Choose the correct causative agent",
+    cardBadge: "Biology",
+    cardTitle: "Disease → Cause",
+    cardDescription: "Match diseases to their causative organisms.",
+    getScorePoints: (elapsedSec, timeLimitMs) => {
+      const third = (timeLimitMs || 6000) / 3000;
+      if (elapsedSec < third) return 12;
+      if (elapsedSec < third * 2) return 8;
+      return 4;
+    },
+    generateQuestion: () => {
+      const item = diseaseCauses[Math.floor(Math.random() * diseaseCauses.length)];
+      return {
+        display: item.disease,
+        correctValue: item.cause,
+        options: generateDiseaseCauseOptions(item.cause),
+      };
+    },
+  },
 };
 
 function shuffleArray(array) {
@@ -1606,4 +1644,57 @@ export const stateOfficials = [
   { state: "Uttar Pradesh", cm: "Yogi Adityanath", governor: "Anandiben Patel" },
   { state: "Uttarakhand", cm: "Pushkar Singh Dhami", governor: "Gurmit Singh" },
   { state: "West Bengal", cm: "Mamata Banerjee", governor: "C. V. Ananda Bose" }
+];
+
+export const diseaseCauses = [
+  { disease: "COVID-19", cause: "Virus (SARS-CoV-2)" },
+  { disease: "Tuberculosis (TB)", cause: "Bacteria (Mycobacterium tuberculosis)" },
+  { disease: "Malaria", cause: "Protozoa (Plasmodium)" },
+  { disease: "Dengue", cause: "Virus (Dengue virus)" },
+  { disease: "Cholera", cause: "Bacteria (Vibrio cholerae)" },
+  { disease: "Typhoid", cause: "Bacteria (Salmonella typhi)" },
+  { disease: "Rabies", cause: "Virus (Rabies virus)" },
+  { disease: "Ringworm", cause: "Fungus (Dermatophytes)" },
+  { disease: "Chickenpox", cause: "Virus (Varicella-zoster)" },
+  { disease: "Measles", cause: "Virus (Measles virus)" },
+  { disease: "Mumps", cause: "Virus (Mumps virus)" },
+  { disease: "Polio", cause: "Virus (Poliovirus)" },
+  { disease: "Hepatitis B", cause: "Virus (Hepatitis B virus)" },
+  { disease: "Hepatitis A", cause: "Virus (Hepatitis A virus)" },
+  { disease: "Tetanus", cause: "Bacteria (Clostridium tetani)" },
+  { disease: "Diphtheria", cause: "Bacteria (Corynebacterium diphtheriae)" },
+  { disease: "Whooping Cough", cause: "Bacteria (Bordetella pertussis)" },
+  { disease: "Leprosy", cause: "Bacteria (Mycobacterium leprae)" },
+  { disease: "Plague", cause: "Bacteria (Yersinia pestis)" },
+  { disease: "Pneumonia", cause: "Bacteria (Streptococcus pneumoniae)" },
+  { disease: "Influenza (Flu)", cause: "Virus (Influenza virus)" },
+  { disease: "Ebola", cause: "Virus (Ebola virus)" },
+  { disease: "Zika", cause: "Virus (Zika virus)" },
+  { disease: "Chikungunya", cause: "Virus (Chikungunya virus)" },
+  { disease: "AIDS", cause: "Virus (HIV)" },
+  { disease: "Athlete's Foot", cause: "Fungus (Trichophyton)" },
+  { disease: "Amoebic Dysentery", cause: "Protozoa (Entamoeba histolytica)" },
+  { disease: "Sleeping Sickness", cause: "Protozoa (Trypanosoma)" },
+  { disease: "Kala-Azar", cause: "Protozoa (Leishmania)" },
+  { disease: "Filariasis", cause: "Helminth (Wuchereria bancrofti)" },
+  { disease: "Ascariasis", cause: "Helminth (Ascaris lumbricoides)" },
+  { disease: "Tapeworm Infection", cause: "Helminth (Taenia)" },
+  { disease: "Anthrax", cause: "Bacteria (Bacillus anthracis)" },
+  { disease: "Syphilis", cause: "Bacteria (Treponema pallidum)" },
+  { disease: "Gonorrhoea", cause: "Bacteria (Neisseria gonorrhoeae)" },
+  { disease: "Smallpox", cause: "Virus (Variola virus)" },
+  { disease: "SARS", cause: "Virus (SARS-CoV)" },
+  { disease: "MERS", cause: "Virus (MERS-CoV)" },
+  { disease: "Japanese Encephalitis", cause: "Virus (JE virus)" },
+  { disease: "Candidiasis", cause: "Fungus (Candida albicans)" },
+  { disease: "Aspergillosis", cause: "Fungus (Aspergillus)" },
+  { disease: "Giardiasis", cause: "Protozoa (Giardia lamblia)" },
+  { disease: "Botulism", cause: "Bacteria (Clostridium botulinum)" },
+  { disease: "Meningitis", cause: "Bacteria (Neisseria meningitidis)" },
+  { disease: "Conjunctivitis (Pink Eye)", cause: "Virus / Bacteria" },
+  { disease: "Swine Flu", cause: "Virus (H1N1)" },
+  { disease: "Bird Flu", cause: "Virus (H5N1)" },
+  { disease: "Yellow Fever", cause: "Virus (Yellow Fever virus)" },
+  { disease: "Leptospirosis", cause: "Bacteria (Leptospira)" },
+  { disease: "Scabies", cause: "Parasite (Sarcoptes scabiei)" },
 ];
