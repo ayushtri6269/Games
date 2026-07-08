@@ -294,14 +294,11 @@ const GAME_MODES = [
   },
 ];
 
-const NAV_ITEMS = [];
-const GameModePage = null;
-
 function ArcadeBackground() {
   return (
     <div className="pointer-events-none fixed inset-0 overflow-hidden">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(240,224,64,0.08),_transparent_34%),radial-gradient(circle_at_top_right,_rgba(64,224,240,0.08),_transparent_30%),radial-gradient(circle_at_bottom_left,_rgba(251,113,133,0.08),_transparent_30%),linear-gradient(180deg,_#080812,_#0a0a0f)]" />
-      <div className="absolute inset-0 bg-[linear-gradient(rgba(240,224,64,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(240,224,64,0.035)_1px,transparent_1px)] bg-[size:40px_40px] opacity-70" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,_rgba(64,224,240,0.07),_transparent_50%),radial-gradient(ellipse_at_bottom_right,_rgba(139,92,246,0.06),_transparent_50%),linear-gradient(180deg,_#080812,_#0a0a0f)]" />
+      <div className="absolute inset-0 bg-[linear-gradient(rgba(64,224,240,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(64,224,240,0.02)_1px,transparent_1px)] bg-[size:48px_48px] opacity-60" />
     </div>
   );
 }
@@ -440,10 +437,45 @@ function AllGameLeaderboards() {
   );
 }
 
-const CATEGORIES = ["All", "Mathematics", "Biology", "Chemistry", "General Knowledge", "Memory & Logic", "English", "Miscellaneous"];
+const CATEGORIES = [
+  { label: "All", icon: "🎯" },
+  { label: "Mathematics", icon: "📐" },
+  { label: "Biology", icon: "🧬" },
+  { label: "Chemistry", icon: "⚗️" },
+  { label: "General Knowledge", icon: "📚" },
+  { label: "Memory & Logic", icon: "🧠" },
+  { label: "English", icon: "✍️" },
+  { label: "Miscellaneous", icon: "🎲" },
+];
 
-function HomePage({ darkMode, currentUser }) {
+function getStudyStats() {
+  try {
+    const lb = JSON.parse(localStorage.getItem('arcade_leaderboard') || '[]');
+    const today = new Date().toDateString();
+    const todayCount = lb.filter(e => new Date(e.timestamp).toDateString() === today).length;
+    return { totalGames: lb.length, todayGames: todayCount, quizCount: GAME_MODES.length };
+  } catch {
+    return { totalGames: 0, todayGames: 0, quizCount: GAME_MODES.length };
+  }
+}
+
+function getPersonalBest(gameId) {
+  try {
+    const hs = JSON.parse(localStorage.getItem('arcade_high_scores') || '{}');
+    for (const user of Object.values(hs)) {
+      for (const key of Object.keys(user)) {
+        if (key.startsWith(gameId + '__')) return user[key];
+      }
+    }
+    return 0;
+  } catch {
+    return 0;
+  }
+}
+
+function HomePage({ currentUser }) {
   const [activeCategory, setActiveCategory] = useState("All");
+  const stats = getStudyStats();
 
   const filteredGames = activeCategory === "All" 
     ? GAME_MODES 
@@ -451,171 +483,167 @@ function HomePage({ darkMode, currentUser }) {
 
   return (
     <main className="mx-auto max-w-7xl px-3 pb-12 pt-6 sm:px-6 sm:pb-16 sm:pt-8 lg:px-8">
-      <section className="grid gap-6 xl:grid-cols-[1.08fr_0.92fr] xl:gap-8">
-        <div className="space-y-6 sm:space-y-8">
-          <div className="inline-flex w-fit items-center gap-3 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-200 backdrop-blur">
-            <span className="h-2.5 w-2.5 rounded-full bg-[#40e0f0] shadow-[0_0_16px_rgba(64,224,240,0.8)]" />
-            Games portal
-          </div>
-
-          <div>
-            <p className="mb-4 text-sm font-semibold uppercase tracking-[0.35em] text-[#f0e040]/90">
-              ARCADE
-            </p>
-            <h1 className="max-w-2xl text-4xl font-black leading-tight text-white sm:text-6xl">
-              Choose Quiz.
+      <section className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr] xl:gap-10">
+        <div className="space-y-6">
+          {/* Hero */}
+          <div className="animate-fade-in-up">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#40e0f0]/20 bg-[#40e0f0]/5 px-4 py-1.5 text-xs font-semibold tracking-[0.15em] text-[#40e0f0]">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#40e0f0] shadow-[0_0_8px_rgba(64,224,240,0.8)]" />
+              {GAME_MODES.length} quizzes available
+            </div>
+            <h1 className="max-w-xl text-4xl font-black leading-[1.1] tracking-tight text-white sm:text-5xl">
+              Master Every
+              <span className="bg-gradient-to-r from-[#40e0f0] to-[#a78bfa] bg-clip-text text-transparent"> Topic</span>
             </h1>
-            <p className="mt-4 max-w-2xl text-base leading-7 text-slate-300 sm:mt-6 sm:text-lg sm:leading-8">
-              Pick a quiz, choose a difficulty, and play from the same
-              responsive arcade menu on desktop or mobile.
+            <p className="mt-4 max-w-lg text-base leading-7 text-slate-400 sm:text-lg">
+              Practice daily. Track your progress. Ace your exams.
             </p>
           </div>
 
-          {/* Categories Filter */}
-          <div className="flex flex-wrap gap-2 mb-4">
-            {CATEGORIES.map(category => (
+          {/* Category Tabs */}
+          <div className="flex flex-wrap gap-2 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+            {CATEGORIES.map(cat => (
               <button
-                key={category}
-                onClick={() => setActiveCategory(category)}
-                className={`rounded-full border px-4 py-1.5 text-xs font-bold uppercase tracking-[0.1em] transition ${
-                  activeCategory === category
-                    ? "border-[#40e0f0]/60 bg-[#40e0f0]/10 text-[#40e0f0]"
-                    : "border-white/10 bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white"
+                key={cat.label}
+                onClick={() => setActiveCategory(cat.label)}
+                className={`rounded-xl border px-3.5 py-2 text-xs font-semibold transition-all duration-200 ${
+                  activeCategory === cat.label
+                    ? "border-[#40e0f0]/40 bg-[#40e0f0]/10 text-[#40e0f0] shadow-[0_0_16px_rgba(64,224,240,0.08)]"
+                    : "border-white/8 bg-white/3 text-slate-400 hover:border-white/15 hover:bg-white/6 hover:text-slate-200"
                 }`}
               >
-                {category}
+                <span className="mr-1.5">{cat.icon}</span>
+                {cat.label}
               </button>
             ))}
           </div>
 
+          {/* Game Cards */}
           {filteredGames.length === 0 ? (
-             <div className="rounded-2xl border border-dashed border-white/10 bg-white/5 p-8 text-center sm:p-12">
-               <p className="text-xl font-bold text-white mb-2">Coming Soon!</p>
-               <p className="text-slate-400">We are working on adding amazing {activeCategory} games. Stay tuned.</p>
-             </div>
+            <div className="animate-fade-in rounded-2xl border border-dashed border-white/10 bg-white/3 p-10 text-center">
+              <div className="text-4xl mb-3">🚀</div>
+              <p className="text-lg font-bold text-white mb-1">Coming Soon!</p>
+              <p className="text-sm text-slate-400">We're adding {activeCategory} quizzes. Stay tuned.</p>
+            </div>
           ) : (
-            <div className="grid gap-4 sm:grid-cols-2">
-              {filteredGames.map((game) => (
-                <Link
-                  key={game.id}
-                  to={game.path}
-                  className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-4 text-left transition duration-300 hover:-translate-y-1 hover:bg-white/[0.08] sm:rounded-[1.75rem] sm:p-6"
-                  style={{
-                    boxShadow: `0 0 0 1px ${game.accent}18, 0 20px 45px rgba(0,0,0,0.22)`,
-                  }}
-                >
-                  <div
-                    className="mb-4 inline-flex rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em]"
-                    style={{
-                      borderColor: `${game.accent}55`,
-                      color: game.accent,
-                      background: `${game.accent}10`,
-                    }}
+            <div className="grid gap-3 sm:grid-cols-2">
+              {filteredGames.map((game, i) => {
+                const best = getPersonalBest(game.id);
+                return (
+                  <Link
+                    key={game.id}
+                    to={game.path}
+                    className={`card-hover group relative overflow-hidden rounded-2xl border border-white/8 bg-white/[0.03] p-5 text-left animate-fade-in-up delay-${Math.min(i + 1, 8)}`}
+                    style={{ animationDelay: `${0.05 * (i + 1)}s` }}
                   >
-                    {game.badge}
-                  </div>
-                  <h2 className="text-xl font-black uppercase tracking-[0.1em] text-white sm:text-2xl sm:tracking-[0.12em]">
-                    {game.title}
-                  </h2>
-                  <p className="mt-3 text-sm leading-6 text-slate-400">
-                    {game.summary}
-                  </p>
-                  <span
-                    className="mt-5 inline-flex text-sm font-bold uppercase tracking-[0.3em] transition group-hover:translate-x-1"
-                    style={{ color: game.accent }}
-                  >
-                    Play →
-                  </span>
-                </Link>
-              ))}
+                    {/* Left accent bar */}
+                    <div
+                      className="absolute left-0 top-0 h-full w-1 rounded-l-2xl transition-all duration-300 group-hover:w-1.5"
+                      style={{ background: `linear-gradient(180deg, ${game.accent}, ${game.accent}44)` }}
+                    />
+                    <div className="pl-3">
+                      <div className="flex items-center justify-between">
+                        <span
+                          className="inline-flex rounded-lg px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.15em]"
+                          style={{
+                            color: game.accent,
+                            background: `${game.accent}12`,
+                          }}
+                        >
+                          {game.badge}
+                        </span>
+                        {best > 0 && (
+                          <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-500">
+                            Best: <span className="text-white">{best}</span>
+                          </span>
+                        )}
+                      </div>
+                      <h2 className="mt-2.5 text-base font-extrabold tracking-tight text-white sm:text-lg">
+                        {game.title}
+                      </h2>
+                      <p className="mt-1.5 text-xs leading-5 text-slate-500">
+                        {game.summary}
+                      </p>
+                      <span
+                        className="mt-3 inline-flex items-center gap-1 text-xs font-bold uppercase tracking-[0.2em] opacity-60 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-1"
+                        style={{ color: game.accent }}
+                      >
+                        Play <span className="text-sm">→</span>
+                      </span>
+                    </div>
+                  </Link>
+                );
+              })}
             </div>
           )}
         </div>
 
-        <aside className="rounded-2xl border border-white/10 bg-white/5 p-4 shadow-[0_30px_120px_rgba(15,23,42,0.4)] backdrop-blur-xl sm:rounded-[2rem] sm:p-8">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[#40e0f0]">
-                Session
-              </p>
-              <h2 className="mt-2 text-2xl font-bold text-white sm:text-3xl">
-                Ready to play
-              </h2>
-            </div>
-            <div className="rounded-2xl border border-white/10 bg-black/20 px-3 py-2 text-right text-xs text-slate-300">
-              Theme
-              <div
-                className="mt-1 font-semibold"
-                style={{ color: darkMode ? "#f0e040" : "#40e0f0" }}
-              >
-                {darkMode ? "Night arc" : "Studio arc"}
-              </div>
+        {/* Sidebar */}
+        <aside className="space-y-4 animate-fade-in-up" style={{ animationDelay: '0.15s' }}>
+          {/* Study Stats */}
+          <div className="glass rounded-2xl p-5">
+            <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#40e0f0]/80">
+              Study Dashboard
+            </p>
+            <h2 className="mt-2 text-xl font-extrabold text-white">
+              {currentUser ? `Welcome, ${currentUser.name}` : 'Start Practicing'}
+            </h2>
+            <div className="mt-4 grid grid-cols-3 gap-3">
+              {[
+                { label: "Today", value: stats.todayGames, accent: "#40e0f0" },
+                { label: "Total", value: stats.totalGames, accent: "#a78bfa" },
+                { label: "Quizzes", value: stats.quizCount, accent: "#f59e0b" },
+              ].map(s => (
+                <div key={s.label} className="rounded-xl border border-white/6 bg-white/3 p-3 text-center">
+                  <div className="text-2xl font-black" style={{ color: s.accent }}>{s.value}</div>
+                  <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">{s.label}</div>
+                </div>
+              ))}
             </div>
           </div>
 
+          {/* Auth Card */}
           {currentUser ? (
-            <div className="mt-8 rounded-3xl border border-white/10 bg-black/20 p-5">
-              <p className="text-xs uppercase tracking-[0.35em] text-slate-500">
-                Logged in
-              </p>
-              <div className="mt-3 text-xl font-bold text-white sm:text-2xl">
-                Welcome back, {currentUser.name}
+            <div className="glass rounded-2xl p-5">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/15 text-lg">
+                  ✅
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-white">{currentUser.name}</p>
+                  <p className="text-xs text-slate-500">Logged in · scores saved locally</p>
+                </div>
               </div>
-              <p className="mt-3 text-sm leading-6 text-slate-400">
-                Your account stays stored locally so the app can reopen in the
-                same state on the next visit.
-              </p>
             </div>
           ) : (
-            <div className="mt-8 rounded-3xl border border-white/10 bg-black/20 p-5">
-              <p className="text-xs uppercase tracking-[0.35em] text-slate-500">
-                Guest mode
+            <div className="glass rounded-2xl p-5">
+              <p className="text-sm font-bold text-white">Track your progress</p>
+              <p className="mt-1 text-xs leading-5 text-slate-500">
+                Create an account to save scores and compete on the leaderboard.
               </p>
-              <div className="mt-3 text-xl font-bold text-white sm:text-2xl">
-                Login or create an account
-              </div>
-              <p className="mt-3 text-sm leading-6 text-slate-400">
-                Use the auth links in the navbar to save a local profile before
-                entering the game menu.
-              </p>
-              <div className="mt-5 flex flex-wrap gap-3">
+              <div className="mt-4 flex gap-2">
                 <Link
                   to="/login"
-                  className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-slate-200 transition hover:bg-white/10"
+                  className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-slate-200 transition hover:bg-white/10"
                 >
                   Login
                 </Link>
                 <Link
                   to="/signup"
-                  className="rounded-full border border-[#fb7185]/40 bg-[#fb7185]/10 px-4 py-2 text-sm font-medium text-[#fb7185] transition hover:bg-[#fb7185]/15"
+                  className="rounded-lg border border-[#40e0f0]/30 bg-[#40e0f0]/8 px-4 py-2 text-xs font-semibold text-[#40e0f0] transition hover:bg-[#40e0f0]/15"
                 >
-                  Signup
+                  Sign up
                 </Link>
               </div>
             </div>
           )}
 
-          <div className="mt-6 grid gap-3 sm:grid-cols-3">
-            {[
-              { label: "Modes", value: "12 + football", accent: "#f0e040" },
-              { label: "Palette", value: "Neon arc", accent: "#40e0f0" },
-              { label: "Storage", value: "Local auth", accent: "#fb7185" },
-            ].map((item) => (
-              <div
-                key={item.label}
-                className="rounded-2xl border border-white/10 bg-white/5 p-4"
-              >
-                <div className="text-xs uppercase tracking-[0.3em] text-slate-500">
-                  {item.label}
-                </div>
-                <div
-                  className="mt-2 text-lg font-bold"
-                  style={{ color: item.accent }}
-                >
-                  {item.value}
-                </div>
-              </div>
-            ))}
+          {/* Quick Tips */}
+          <div className="glass rounded-2xl p-5">
+            <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#f59e0b]/70">💡 Study Tip</p>
+            <p className="mt-2 text-sm leading-6 text-slate-300">
+              Play each quiz on <span className="font-bold text-white">Advanced (3s)</span> difficulty to simulate real exam pressure. Speed + accuracy wins!
+            </p>
           </div>
         </aside>
       </section>
@@ -654,11 +682,10 @@ function ArcadeLayout() {
   }
 
   return (
-    <div className="min-h-screen overflow-x-hidden text-slate-100 font-mono">
+    <div className="min-h-screen overflow-x-hidden text-slate-100">
       <ArcadeBackground />
       <div className="relative z-10">
         <Navbar
-          darkMode={darkMode}
           currentUser={currentUser}
           location={location}
           onToggleTheme={() => dispatch(toggleTheme())}
@@ -668,7 +695,9 @@ function ArcadeLayout() {
         <Routes>
           <Route
             path="/"
-            element={<HomePage darkMode={darkMode} currentUser={currentUser} />}
+            element={
+              <HomePage currentUser={currentUser} />
+            }
           />
           <Route path="/alphabet" element={<AlphabetQuiz />} />
           <Route path="/square" element={<SquareQuiz />} />
@@ -695,195 +724,16 @@ function ArcadeLayout() {
           <Route path="/leaderboard" element={<Leaderboard />} />
           <Route
             path="*"
-            element={<HomePage darkMode={darkMode} currentUser={currentUser} />}
+            element={<HomePage currentUser={currentUser} />}
           />
         </Routes>
-        <Footer darkMode={darkMode} />
+        <Footer />
       </div>
     </div>
   );
 }
 
-function Layout() {
-  const dispatch = useDispatch();
-  const darkMode = useSelector((state) => state.theme.darkMode);
-  const currentUser = useSelector((state) => state.auth.currentUser);
-  const location = useLocation();
 
-  useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-  }, [darkMode]);
-
-  useEffect(() => {
-    if (currentUser) {
-      window.localStorage.setItem(
-        "games-auth-user",
-        JSON.stringify(currentUser),
-      );
-    } else {
-      window.localStorage.removeItem("games-auth-user");
-    }
-  }, [currentUser]);
-
-  // If we're on the football page, render it full-screen without the app shell
-  if (location.pathname === "/football") {
-    return <FootBall />;
-  }
-
-  return (
-    <div
-      className={`min-h-screen transition-colors duration-300 ${darkMode ? "bg-gray-900 text-white" : "bg-white text-gray-900"}`}
-    >
-      {/* Header */}
-      <header className="flex justify-between items-center p-6 max-w-6xl mx-auto">
-        <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent">
-          <Link to="/">MyApp</Link>
-        </h1>
-        <div className="flex items-center gap-4">
-          {currentUser ? (
-            <div
-              className={`hidden sm:flex items-center gap-3 rounded-full px-4 py-2 text-sm ${darkMode ? "bg-gray-800 text-gray-200" : "bg-gray-100 text-gray-700"}`}
-            >
-              <span className="h-2 w-2 rounded-full bg-emerald-400" />
-              Hi, {currentUser.name}
-            </div>
-          ) : (
-            <>
-              <Link
-                to="/login"
-                className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${darkMode ? "bg-gray-800 text-white hover:bg-gray-700" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}
-              >
-                Login
-              </Link>
-              <Link
-                to="/signup"
-                className="px-4 py-2 rounded-lg font-medium transition-all duration-300 bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-500 hover:to-pink-500"
-              >
-                Signup
-              </Link>
-            </>
-          )}
-          <Link
-            to="/football"
-            className="px-4 py-2 rounded-lg font-medium transition-all duration-300 bg-green-600 text-white hover:bg-green-700"
-          >
-            ⚽ Football
-          </Link>
-          <button
-            onClick={() => dispatch(toggleTheme())}
-            className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
-              darkMode
-                ? "bg-gray-800 text-yellow-400 hover:bg-gray-700"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-            }`}
-          >
-            {darkMode ? "☀️ Light" : "🌙 Dark"}
-          </button>
-          {currentUser && (
-            <button
-              onClick={() => dispatch(logout())}
-              className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${darkMode ? "bg-red-900/60 text-red-100 hover:bg-red-900" : "bg-red-50 text-red-700 hover:bg-red-100"}`}
-            >
-              Logout
-            </button>
-          )}
-        </div>
-      </header>
-
-      {/* Hero Section */}
-      <main className="max-w-6xl mx-auto px-6 py-16">
-        <div className="text-center mb-16">
-          <h2 className="text-5xl font-bold mb-6">
-            {currentUser ? `Welcome back, ${currentUser.name}` : "Welcome to"}{" "}
-            <span className="text-purple-600">MyApp</span>
-          </h2>
-          <p
-            className={`text-xl mb-8 ${darkMode ? "text-gray-400" : "text-gray-600"}`}
-          >
-            {currentUser
-              ? "Your account is saved locally and ready for the next session."
-              : "Build amazing things with React and Tailwind CSS"}
-          </p>
-          <div className="flex gap-4 justify-center">
-            <Link
-              to="/football"
-              className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium"
-            >
-              Play Football ⚽
-            </Link>
-            {!currentUser && (
-              <Link
-                to="/signup"
-                className={`px-6 py-3 rounded-lg font-medium transition-colors ${
-                  darkMode
-                    ? "bg-gray-800 text-white hover:bg-gray-700"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                }`}
-              >
-                Create account
-              </Link>
-            )}
-            <button
-              className={`px-6 py-3 rounded-lg font-medium transition-colors ${
-                darkMode
-                  ? "bg-gray-800 text-white hover:bg-gray-700"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-              }`}
-            >
-              Learn More
-            </button>
-          </div>
-        </div>
-
-        {/* Features */}
-        <div className="grid md:grid-cols-3 gap-8 mb-16">
-          {[
-            {
-              title: "Fast",
-              desc: "Built with Vite for lightning fast development",
-            },
-            {
-              title: "Modern",
-              desc: "Using React 19 with the latest features",
-            },
-            { title: "Stylish", desc: "Beautiful UI with Tailwind CSS" },
-          ].map((feature, i) => (
-            <div
-              key={i}
-              className={`p-6 rounded-xl transition-colors duration-300 ${
-                darkMode ? "bg-gray-800" : "bg-gray-50"
-              }`}
-            >
-              <h3 className="text-xl font-semibold mb-2 text-purple-600">
-                {feature.title}
-              </h3>
-              <p className={darkMode ? "text-gray-400" : "text-gray-600"}>
-                {feature.desc}
-              </p>
-            </div>
-          ))}
-        </div>
-      </main>
-
-      {/* Footer */}
-      <footer
-        className={`py-6 text-center transition-colors duration-300 ${
-          darkMode ? "bg-gray-800 text-gray-400" : "bg-gray-50 text-gray-600"
-        }`}
-      >
-        <p>© 2024 MyApp. All rights reserved.</p>
-      </footer>
-    </div>
-  );
-}
-
-void NAV_ITEMS;
-void GameModePage;
-void Layout;
 
 function App() {
   return (
