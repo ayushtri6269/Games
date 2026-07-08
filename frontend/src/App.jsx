@@ -567,148 +567,6 @@ function HomePage({ currentUser }) {
               </div>
             </div>
           </div>
-
-          <section
-            id="quiz-library"
-            className="surface rounded-3xl p-4 animate-fade-in-up sm:p-5"
-            style={{ animationDelay: "0.08s" }}
-          >
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#f0e040]/80">
-                  Quiz library
-                </p>
-                <h2 className="mt-2 text-2xl font-black text-white sm:text-3xl">
-                  Find your next drill
-                </h2>
-              </div>
-
-              <label className="block lg:w-80">
-                <span className="sr-only">Search quizzes</span>
-                <input
-                  value={searchTerm}
-                  onChange={(event) => setSearchTerm(event.target.value)}
-                  placeholder="Search math, capitals, biology..."
-                  className="touch-target w-full rounded-2xl border border-white/10 bg-black/24 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-[#40e0f0]/60 focus:bg-black/30"
-                />
-              </label>
-            </div>
-
-            <div className="mt-5 flex gap-2 overflow-x-auto pb-2 sm:flex-wrap sm:overflow-visible sm:pb-0">
-              {CATEGORIES.map((cat) => {
-                const active = activeCategory === cat.label;
-                const count =
-                  cat.label === "All"
-                    ? GAME_MODES.length
-                    : categoryCounts[cat.label] || 0;
-
-                return (
-                  <button
-                    key={cat.label}
-                    onClick={() => setActiveCategory(cat.label)}
-                    aria-pressed={active}
-                    className={`interactive-lift touch-target shrink-0 rounded-2xl border px-3.5 py-2 text-xs font-semibold transition-all duration-200 ${
-                      active
-                        ? "border-[#40e0f0]/45 bg-[#40e0f0]/12 text-[#40e0f0] shadow-[0_0_18px_rgba(64,224,240,0.1)]"
-                        : "border-white/8 bg-white/[0.03] text-slate-400 hover:border-white/15 hover:bg-white/[0.06] hover:text-slate-200"
-                    }`}
-                    type="button"
-                  >
-                    <span className="mr-1.5">{cat.icon}</span>
-                    {cat.label}
-                    <span className="ml-2 rounded-full bg-white/8 px-2 py-0.5 text-[10px] text-slate-400">
-                      {count}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-
-            {filteredGames.length === 0 ? (
-              <div className="mt-5 animate-fade-in rounded-2xl border border-dashed border-white/10 bg-white/[0.03] p-10 text-center">
-                <div className="text-4xl mb-3">🔎</div>
-                <p className="mb-1 text-lg font-bold text-white">No quiz found</p>
-                <p className="text-sm text-slate-400">
-                  Try a different search term or switch back to All.
-                </p>
-              </div>
-            ) : (
-              <div className="mt-5 grid gap-3 md:grid-cols-2">
-                {filteredGames.map((game, i) => {
-                  const best = getPersonalBest(game.id);
-                  return (
-                    <Link
-                      key={game.id}
-                      to={game.path}
-                      className="interactive-lift group relative overflow-hidden rounded-2xl border border-white/8 bg-white/[0.035] p-5 text-left animate-fade-in-up"
-                      style={{ animationDelay: `${Math.min(i * 35, 280)}ms` }}
-                    >
-                      <div
-                        className="absolute inset-x-0 top-0 h-1"
-                        style={{ background: game.accent }}
-                      />
-                      <div
-                        className="absolute right-0 top-0 h-28 w-28 opacity-0 blur-2xl transition-opacity duration-300 group-hover:opacity-100"
-                        style={{ background: `${game.accent}33` }}
-                      />
-
-                      <div className="relative flex items-start gap-4">
-                        <div
-                          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border text-lg font-black"
-                          style={{
-                            borderColor: `${game.accent}55`,
-                            color: game.accent,
-                            background: `${game.accent}12`,
-                          }}
-                        >
-                          {game.hero}
-                        </div>
-
-                        <div className="min-w-0 flex-1">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span
-                              className="inline-flex rounded-lg px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.15em]"
-                              style={{
-                                color: game.accent,
-                                background: `${game.accent}12`,
-                              }}
-                            >
-                              {game.badge}
-                            </span>
-                            {best > 0 && (
-                              <span className="rounded-lg bg-white/[0.04] px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400">
-                                Best <span className="text-white">{best}</span>
-                              </span>
-                            )}
-                          </div>
-
-                          <h3 className="mt-3 text-lg font-extrabold tracking-tight text-white">
-                            {game.title}
-                          </h3>
-                          <p className="mt-1.5 line-clamp-2 text-sm leading-6 text-slate-400">
-                            {game.details}
-                          </p>
-
-                          <div className="mt-4 flex flex-wrap items-center gap-2 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">
-                            <span>{game.category}</span>
-                            <span>•</span>
-                            <span>{game.rules}</span>
-                          </div>
-
-                          <span
-                            className="mt-4 inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] opacity-70 transition-all duration-300 group-hover:translate-x-1 group-hover:opacity-100"
-                            style={{ color: game.accent }}
-                          >
-                            Study and play <span aria-hidden="true">→</span>
-                          </span>
-                        </div>
-                      </div>
-                    </Link>
-                  );
-                })}
-              </div>
-            )}
-          </section>
         </div>
 
         <aside className="space-y-4 animate-fade-in-up" style={{ animationDelay: "0.14s" }}>
@@ -805,6 +663,149 @@ function HomePage({ currentUser }) {
           </div>
         </aside>
       </section>
+
+      <section
+        id="quiz-library"
+        className="surface mt-6 rounded-3xl p-4 animate-fade-in-up sm:p-5"
+        style={{ animationDelay: "0.08s" }}
+      >
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#f0e040]/80">
+              Quiz library
+            </p>
+            <h2 className="mt-2 text-2xl font-black text-white sm:text-3xl">
+              Find your next drill
+            </h2>
+          </div>
+
+          <label className="block lg:w-80">
+            <span className="sr-only">Search quizzes</span>
+            <input
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+              placeholder="Search math, capitals, biology..."
+              className="touch-target w-full rounded-2xl border border-white/10 bg-black/24 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-[#40e0f0]/60 focus:bg-black/30"
+            />
+          </label>
+        </div>
+
+        <div className="mt-5 flex gap-2 overflow-x-auto pb-2 sm:flex-wrap sm:overflow-visible sm:pb-0">
+          {CATEGORIES.map((cat) => {
+            const active = activeCategory === cat.label;
+            const count =
+              cat.label === "All"
+                ? GAME_MODES.length
+                : categoryCounts[cat.label] || 0;
+
+            return (
+              <button
+                key={cat.label}
+                onClick={() => setActiveCategory(cat.label)}
+                aria-pressed={active}
+                className={`interactive-lift touch-target shrink-0 rounded-2xl border px-3.5 py-2 text-xs font-semibold transition-all duration-200 ${
+                  active
+                    ? "border-[#40e0f0]/45 bg-[#40e0f0]/12 text-[#40e0f0] shadow-[0_0_18px_rgba(64,224,240,0.1)]"
+                    : "border-white/8 bg-white/[0.03] text-slate-400 hover:border-white/15 hover:bg-white/[0.06] hover:text-slate-200"
+                }`}
+                type="button"
+              >
+                <span className="mr-1.5">{cat.icon}</span>
+                {cat.label}
+                <span className="ml-2 rounded-full bg-white/8 px-2 py-0.5 text-[10px] text-slate-400">
+                  {count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        {filteredGames.length === 0 ? (
+          <div className="mt-5 animate-fade-in rounded-2xl border border-dashed border-white/10 bg-white/[0.03] p-10 text-center">
+            <div className="text-4xl mb-3">🔎</div>
+            <p className="mb-1 text-lg font-bold text-white">No quiz found</p>
+            <p className="text-sm text-slate-400">
+              Try a different search term or switch back to All.
+            </p>
+          </div>
+        ) : (
+          <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            {filteredGames.map((game, i) => {
+              const best = getPersonalBest(game.id);
+              return (
+                <Link
+                  key={game.id}
+                  to={game.path}
+                  className="interactive-lift group relative overflow-hidden rounded-2xl border border-white/8 bg-white/[0.035] p-5 text-left animate-fade-in-up"
+                  style={{ animationDelay: `${Math.min(i * 35, 280)}ms` }}
+                >
+                  <div
+                    className="absolute inset-x-0 top-0 h-1"
+                    style={{ background: game.accent }}
+                  />
+                  <div
+                    className="absolute right-0 top-0 h-28 w-28 opacity-0 blur-2xl transition-opacity duration-300 group-hover:opacity-100"
+                    style={{ background: `${game.accent}33` }}
+                  />
+
+                  <div className="relative flex items-start gap-4">
+                    <div
+                      className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border text-lg font-black"
+                      style={{
+                        borderColor: `${game.accent}55`,
+                        color: game.accent,
+                        background: `${game.accent}12`,
+                      }}
+                    >
+                      {game.hero}
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span
+                          className="inline-flex rounded-lg px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.15em]"
+                          style={{
+                            color: game.accent,
+                            background: `${game.accent}12`,
+                          }}
+                        >
+                          {game.badge}
+                        </span>
+                        {best > 0 && (
+                          <span className="rounded-lg bg-white/[0.04] px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400">
+                            Best <span className="text-white">{best}</span>
+                          </span>
+                        )}
+                      </div>
+
+                      <h3 className="mt-3 text-lg font-extrabold tracking-tight text-white">
+                        {game.title}
+                      </h3>
+                      <p className="mt-1.5 line-clamp-2 text-sm leading-6 text-slate-400">
+                        {game.details}
+                      </p>
+
+                      <div className="mt-4 flex flex-wrap items-center gap-2 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">
+                        <span>{game.category}</span>
+                        <span>•</span>
+                        <span>{game.rules}</span>
+                      </div>
+
+                      <span
+                        className="mt-4 inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] opacity-70 transition-all duration-300 group-hover:translate-x-1 group-hover:opacity-100"
+                        style={{ color: game.accent }}
+                      >
+                        Study and play <span aria-hidden="true">→</span>
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        )}
+      </section>
+
       <AllGameLeaderboards />
     </main>
   );
