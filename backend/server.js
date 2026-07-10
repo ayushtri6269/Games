@@ -21,10 +21,7 @@ app.use(express.json());
 
 // MongoDB Connection
 if (process.env.MONGODB_URI) {
-  mongoose.connect(process.env.MONGODB_URI, {
-    tls: true,
-    retryWrites: false,
-  })
+  mongoose.connect(process.env.MONGODB_URI)
     .then(async () => {
       console.log('MongoDB connected successfully');
 
