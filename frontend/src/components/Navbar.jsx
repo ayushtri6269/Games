@@ -1,5 +1,7 @@
 import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
+import { useState } from "react";
+import ChangePasswordModal from "./ChangePasswordModal";
 
 const NAV_LINKS = [
   { to: "/", label: "Home" },
@@ -15,6 +17,7 @@ export default function Navbar({
   const isActive = (path) => location.pathname === path;
   const initial = currentUser?.name?.trim()?.charAt(0)?.toUpperCase() || "G";
   const isAdmin = useSelector((state) => state.auth.isAdmin);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
 
   return (
     <header className="sticky top-0 z-20 border-b border-white/10 bg-[#07101d]/85 backdrop-blur-2xl">
@@ -56,14 +59,7 @@ export default function Navbar({
         </nav>
 
         <div className="flex items-center gap-2">
-          {currentUser ? (
-            <div className="hidden items-center gap-2.5 rounded-xl border border-emerald-400/15 bg-emerald-400/8 px-3.5 py-2 text-sm text-slate-100 sm:flex">
-              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-400/15 text-xs font-black text-emerald-200">
-                {initial}
-              </span>
-              <span className="max-w-32 truncate">{currentUser.name}</span>
-            </div>
-          ) : (
+          {!currentUser && (
             <div className="hidden items-center gap-2 sm:flex">
               <Link
                 to="/login"
@@ -91,13 +87,30 @@ export default function Navbar({
           </button>
 
           {currentUser ? (
-            <button
-              onClick={onLogout}
-              className="touch-target rounded-xl border border-rose-300/15 bg-rose-500/8 px-3 text-sm font-medium text-rose-200 transition hover:bg-rose-500/14"
-              type="button"
-            >
-              Logout
-            </button>
+            <div className="group relative">
+              <button className="hidden items-center gap-2.5 rounded-xl border border-emerald-400/15 bg-emerald-400/8 px-3.5 py-2 text-sm text-slate-100 sm:flex transition hover:bg-emerald-400/15">
+                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-400/15 text-xs font-black text-emerald-200">
+                  {initial}
+                </span>
+                <span className="max-w-32 truncate">{currentUser.name}</span>
+                <span className="text-[10px] text-emerald-400/50">▼</span>
+              </button>
+              
+              <div className="absolute right-0 top-full mt-2 hidden w-48 flex-col overflow-hidden rounded-xl border border-white/10 bg-[#07101d] shadow-xl group-hover:flex backdrop-blur-2xl">
+                <button
+                  onClick={() => setShowPasswordModal(true)}
+                  className="px-4 py-3 text-left text-sm text-slate-300 transition hover:bg-white/5 hover:text-white"
+                >
+                  Change Password
+                </button>
+                <button
+                  onClick={onLogout}
+                  className="px-4 py-3 text-left text-sm text-rose-400 transition hover:bg-rose-500/10"
+                >
+                  Logout
+                </button>
+              </div>
+            </div>
           ) : (
             <Link
               to="/signup"
@@ -108,6 +121,13 @@ export default function Navbar({
           )}
         </div>
       </div>
+      {showPasswordModal && currentUser && (
+        <ChangePasswordModal
+          user={currentUser}
+          onClose={() => setShowPasswordModal(false)}
+          onLogout={onLogout}
+        />
+      )}
     </header>
   );
 }
