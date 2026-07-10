@@ -578,6 +578,12 @@ export default function QuizGame({ game }) {
               Play Again
             </button>
             <button
+              onClick={() => setScreen("difficulty")}
+              className="rounded-full border border-orange-400/30 bg-orange-400/10 px-6 py-3 text-sm font-bold uppercase tracking-[0.25em] text-orange-400 transition hover:bg-orange-400/20"
+            >
+              Reset
+            </button>
+            <button
               onClick={() => {
                 setReadReturnScreen("end");
                 setScreen("read");
