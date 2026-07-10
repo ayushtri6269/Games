@@ -53,7 +53,11 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/score', scoreRoutes);
 
 app.get('/api/test', (req, res) => {
-  res.json({ message: 'Backend connected successfully!' });
+  res.json({
+    message: 'Backend connected successfully!',
+    dbState: mongoose.connection.readyState, // 0=disconnected,1=connected,2=connecting,3=disconnecting
+    hasMongoUri: !!process.env.MONGODB_URI,
+  });
 });
 
 // Serve index.html for all other routes (SPA support)
