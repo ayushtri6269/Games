@@ -72,6 +72,8 @@ export const MODE_LABELS = {
   diseaseCause: 'Disease',
   animalKingdom: 'Animals',
   siUnits: 'SI Units',
+  scientificName: 'Scientific Name',
+  stateDance: 'State & Dance',
 };
 
 export const DIFF_LABELS = {

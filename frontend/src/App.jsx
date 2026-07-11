@@ -34,6 +34,8 @@ import StateOfficialsQuiz from "./pages/StateOfficialsQuiz";
 import DiseaseCauseQuiz from "./pages/DiseaseCauseQuiz";
 import AnimalKingdomQuiz from "./pages/AnimalKingdomQuiz";
 import SiUnitsQuiz from "./pages/SiUnitsQuiz";
+import ScientificNameQuiz from "./pages/ScientificNameQuiz";
+import StateDanceQuiz from "./pages/StateDanceQuiz";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import Leaderboard from "./pages/Leaderboard";
@@ -321,6 +323,34 @@ const GAME_MODES = [
     accent: "#818cf8",
     summary: "What is the SI unit of...",
     details: "Match physical quantities to their correct SI units.",
+  },
+  {
+    id: "scientificName",
+    path: "/scientific-name",
+    title: "Scientific Names Quiz",
+    badge: "Biology",
+    category: "Biology",
+    hero: "🧬",
+    intro: "What is the scientific (binomial) name of this organism?",
+    rules: "<1s = 12pts · <2s = 8pts · <3s = 4pts · wrong = over",
+    reference: "60 organisms — mammals, birds, reptiles, insects, plants & microbes.",
+    accent: "#34d399",
+    summary: "Scientific name of...",
+    details: "Match organisms to their Latin binomial names.",
+  },
+  {
+    id: "stateDance",
+    path: "/state-dance",
+    title: "State & Dance Quiz",
+    badge: "Culture",
+    category: "General Knowledge",
+    hero: "💃",
+    intro: "Which state is famous for this folk or classical dance?",
+    rules: "<1s = 12pts · <2s = 8pts · <3s = 4pts · wrong = over",
+    reference: "Prominent Indian state dances like Kathak, Bihu, and Garba.",
+    accent: "#fb7185",
+    summary: "State of...",
+    details: "Match Indian states to their famous dances.",
   },
 ];
 
@@ -1128,6 +1158,8 @@ function ArcadeLayout() {
           <Route path="/disease-cause" element={<DiseaseCauseQuiz />} />
           <Route path="/animal-kingdom" element={<AnimalKingdomQuiz />} />
           <Route path="/si-units" element={<SiUnitsQuiz />} />
+          <Route path="/scientific-name" element={<ScientificNameQuiz />} />
+          <Route path="/state-dance" element={<StateDanceQuiz />} />
 
           <Route
             path="/indian-vice-president"

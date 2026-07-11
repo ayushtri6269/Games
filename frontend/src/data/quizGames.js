@@ -1902,3 +1902,210 @@ Object.assign(quizGames, {
     },
   },
 });
+
+// ─── Scientific Names Data ────────────────────────────────────────────────────
+export const scientificNames = [
+  // Mammals
+  { common: "Human", scientific: "Homo sapiens" },
+  { common: "Dog", scientific: "Canis lupus familiaris" },
+  { common: "Cat", scientific: "Felis catus" },
+  { common: "Cow", scientific: "Bos taurus" },
+  { common: "Horse", scientific: "Equus caballus" },
+  { common: "Tiger", scientific: "Panthera tigris" },
+  { common: "Lion", scientific: "Panthera leo" },
+  { common: "Elephant (Asian)", scientific: "Elephas maximus" },
+  { common: "Elephant (African)", scientific: "Loxodonta africana" },
+  { common: "Rabbit", scientific: "Oryctolagus cuniculus" },
+  { common: "Rat", scientific: "Rattus rattus" },
+  { common: "Mouse (House)", scientific: "Mus musculus" },
+  { common: "Monkey (Rhesus)", scientific: "Macaca mulatta" },
+  { common: "Gorilla", scientific: "Gorilla gorilla" },
+  { common: "Chimpanzee", scientific: "Pan troglodytes" },
+  { common: "Whale (Blue)", scientific: "Balaenoptera musculus" },
+  { common: "Dolphin", scientific: "Delphinus delphis" },
+  { common: "Bat (Fruit)", scientific: "Pteropus giganteus" },
+  { common: "Deer (Spotted)", scientific: "Axis axis" },
+  { common: "Fox (Red)", scientific: "Vulpes vulpes" },
+  { common: "Bear (Brown)", scientific: "Ursus arctos" },
+  { common: "Wolf", scientific: "Canis lupus" },
+  { common: "Zebra", scientific: "Equus quagga" },
+  { common: "Giraffe", scientific: "Giraffa camelopardalis" },
+  { common: "Hippopotamus", scientific: "Hippopotamus amphibius" },
+  { common: "Rhinoceros (Indian)", scientific: "Rhinoceros unicornis" },
+  // Birds
+  { common: "Peacock (Indian)", scientific: "Pavo cristatus" },
+  { common: "Crow (House)", scientific: "Corvus splendens" },
+  { common: "Sparrow (House)", scientific: "Passer domesticus" },
+  { common: "Pigeon", scientific: "Columba livia" },
+  { common: "Parrot (Rose-ringed)", scientific: "Psittacula krameri" },
+  { common: "Eagle (Bald)", scientific: "Haliaeetus leucocephalus" },
+  { common: "Penguin (Emperor)", scientific: "Aptenodytes forsteri" },
+  { common: "Ostrich", scientific: "Struthio camelus" },
+  // Reptiles & Amphibians
+  { common: "Cobra (King)", scientific: "Ophiophagus hannah" },
+  { common: "Python (Indian)", scientific: "Python molurus" },
+  { common: "Crocodile (Saltwater)", scientific: "Crocodylus porosus" },
+  { common: "Tortoise (Indian Star)", scientific: "Geochelone elegans" },
+  { common: "Frog (Common)", scientific: "Rana temporaria" },
+  { common: "Chameleon", scientific: "Chamaeleo chamaeleon" },
+  { common: "Komodo Dragon", scientific: "Varanus komodoensis" },
+  // Fish
+  { common: "Goldfish", scientific: "Carassius auratus" },
+  { common: "Catfish (Walking)", scientific: "Clarias batrachus" },
+  { common: "Shark (Great White)", scientific: "Carcharodon carcharias" },
+  // Insects
+  { common: "Housefly", scientific: "Musca domestica" },
+  { common: "Mosquito (Anopheles)", scientific: "Anopheles stephensi" },
+  { common: "Honey Bee", scientific: "Apis mellifera" },
+  { common: "Silkworm", scientific: "Bombyx mori" },
+  { common: "Cockroach", scientific: "Periplaneta americana" },
+  { common: "Butterfly (Monarch)", scientific: "Danaus plexippus" },
+  // Plants
+  { common: "Rice", scientific: "Oryza sativa" },
+  { common: "Wheat", scientific: "Triticum aestivum" },
+  { common: "Maize (Corn)", scientific: "Zea mays" },
+  { common: "Mango", scientific: "Mangifera indica" },
+  { common: "Banana", scientific: "Musa paradisiaca" },
+  { common: "Neem", scientific: "Azadirachta indica" },
+  { common: "Tulsi (Holy Basil)", scientific: "Ocimum tenuiflorum" },
+  { common: "Banyan Tree", scientific: "Ficus benghalensis" },
+  { common: "Peepal Tree", scientific: "Ficus religiosa" },
+  { common: "Rose", scientific: "Rosa indica" },
+  // Microorganisms
+  { common: "Amoeba", scientific: "Amoeba proteus" },
+  { common: "Plasmodium (Malaria)", scientific: "Plasmodium vivax" },
+];
+
+function generateScientificNameOptions(correct) {
+  const allNames = scientificNames.map((s) => s.scientific);
+  const options = new Set([correct]);
+  const pool = shuffleArray(allNames.filter((n) => n !== correct));
+  for (const n of pool) {
+    if (options.size >= 4) break;
+    options.add(n);
+  }
+  return shuffleArray(Array.from(options));
+}
+
+// Extend quizGames with scientificName
+Object.assign(quizGames, {
+  scientificName: {
+    key: "scientificName",
+    title: "Scientific Names Quiz",
+    bigLetter: "🧬",
+    intro: "What is the scientific (binomial) name of this organism?",
+    rules: "<1s = 12pts · <2s = 8pts · <3s = 4pts · wrong = over",
+    reference: "60 organisms — mammals, birds, reptiles, insects, plants & microbes.",
+    accent: "#34d399",
+    timeLimit: 3000,
+    prompt: "Scientific name of",
+    subtext: "Pick the correct binomial name",
+    cardBadge: "Biology",
+    cardTitle: "Scientific Names Quiz",
+    cardDescription: "Match organisms to their Latin binomial names.",
+    getScorePoints: (elapsedSec, timeLimitMs) => {
+      const third = (timeLimitMs || 3000) / 3000;
+      if (elapsedSec < third) return 12;
+      if (elapsedSec < third * 2) return 8;
+      return 4;
+    },
+    generateQuestion: () => {
+      const item = scientificNames[Math.floor(Math.random() * scientificNames.length)];
+      return {
+        display: item.common,
+        correctValue: item.scientific,
+        options: generateScientificNameOptions(item.scientific),
+      };
+    },
+  },
+});
+
+// ─── State and Dance Data ────────────────────────────────────────────────────
+export const stateDances = [
+  { state: "Andhra Pradesh", dance: "Kuchipudi" },
+  { state: "Assam", dance: "Bihu" },
+  { state: "Bihar", dance: "Jata-Jatin" },
+  { state: "Gujarat", dance: "Garba" },
+  { state: "Haryana", dance: "Jhumar" },
+  { state: "Himachal Pradesh", dance: "Nati" },
+  { state: "Jammu & Kashmir", dance: "Rauf" },
+  { state: "Karnataka", dance: "Yakshagana" },
+  { state: "Kerala", dance: "Kathakali" },
+  { state: "Maharashtra", dance: "Lavani" },
+  { state: "Odisha", dance: "Odissi" },
+  { state: "Punjab", dance: "Bhangra" },
+  { state: "Rajasthan", dance: "Ghoomar" },
+  { state: "Tamil Nadu", dance: "Bharatanatyam" },
+  { state: "Uttar Pradesh", dance: "Kathak" },
+  { state: "Uttarakhand", dance: "Garhwali" },
+  { state: "Goa", dance: "Fugdi" },
+  { state: "Madhya Pradesh", dance: "Matki" },
+  { state: "Chhattisgarh", dance: "Raut Nacha" },
+  { state: "Jharkhand", dance: "Jhumar" },
+  { state: "Arunachal Pradesh", dance: "Lion and Peacock Dance" },
+  { state: "Manipur", dance: "Manipuri" },
+  { state: "Meghalaya", dance: "Nongkrem" },
+  { state: "Mizoram", dance: "Cheraw (Bamboo Dance)" },
+  { state: "Nagaland", dance: "Chang Lo" },
+  { state: "Tripura", dance: "Hojagiri" },
+  { state: "Sikkim", dance: "Singhi Chham" },
+  { state: "Lakshadweep", dance: "Lava" },
+];
+
+function generateStateDanceOptions(correct) {
+  const allDances = stateDances.map((s) => s.dance);
+  const options = new Set([correct]);
+  const pool = shuffleArray(allDances.filter((d) => d !== correct));
+  for (const d of pool) {
+    if (options.size >= 4) break;
+    options.add(d);
+  }
+  return shuffleArray(Array.from(options));
+}
+
+// Extend quizGames with stateDance
+Object.assign(quizGames, {
+  stateDance: {
+    key: "stateDance",
+    title: "State & Dance Quiz",
+    bigLetter: "💃",
+    intro: "Which state is famous for this folk or classical dance?",
+    rules: "<1s = 12pts · <2s = 8pts · <3s = 4pts · wrong = over",
+    reference: "Prominent Indian state dances like Kathak, Bihu, and Garba.",
+    accent: "#fb7185", // Rose
+    timeLimit: 3000,
+    prompt: "State of",
+    subtext: "Pick the correct state for this dance",
+    cardBadge: "Culture",
+    cardTitle: "State & Dance Quiz",
+    cardDescription: "Match Indian states to their famous dances.",
+    getScorePoints: (elapsedSec, timeLimitMs) => {
+      const third = (timeLimitMs || 3000) / 3000;
+      if (elapsedSec < third) return 12;
+      if (elapsedSec < third * 2) return 8;
+      return 4;
+    },
+    generateQuestion: () => {
+      const item = stateDances[Math.floor(Math.random() * stateDances.length)];
+      
+      // We are asking for the state given the dance OR the dance given the state.
+      // Let's ask: What is the dance of this state?
+      // Wait, prompt says "State of", meaning the question is about the State.
+      // So display: dance name. correctValue: State.
+      
+      const allStates = stateDances.map(s => s.state);
+      const options = new Set([item.state]);
+      const pool = shuffleArray(allStates.filter(s => s !== item.state));
+      for (const s of pool) {
+        if (options.size >= 4) break;
+        options.add(s);
+      }
+      
+      return {
+        display: item.dance,
+        correctValue: item.state,
+        options: shuffleArray(Array.from(options)),
+      };
+    },
+  },
+});
