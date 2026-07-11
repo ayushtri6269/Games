@@ -2246,3 +2246,95 @@ Object.assign(quizGames, {
     },
   },
 });
+
+// ─── Company Origin Data ────────────────────────────────────────────────────
+export const companyOriginData = [
+  // Tech Companies
+  { company: "Apple", country: "USA", category: "Tech" },
+  { company: "Samsung", country: "South Korea", category: "Tech" },
+  { company: "Sony", country: "Japan", category: "Tech" },
+  { company: "Tencent", country: "China", category: "Tech" },
+  { company: "SAP", country: "Germany", category: "Tech" },
+  { company: "Nokia", country: "Finland", category: "Tech" },
+  { company: "Infosys", country: "India", category: "Tech" },
+  { company: "Spotify", country: "Sweden", category: "Tech" },
+  // Vehicle Companies
+  { company: "Toyota", country: "Japan", category: "Vehicle" },
+  { company: "Ford", country: "USA", category: "Vehicle" },
+  { company: "Volkswagen", country: "Germany", category: "Vehicle" },
+  { company: "Hyundai", country: "South Korea", category: "Vehicle" },
+  { company: "Ferrari", country: "Italy", category: "Vehicle" },
+  { company: "Volvo", country: "Sweden", category: "Vehicle" },
+  { company: "Tata Motors", country: "India", category: "Vehicle" },
+  { company: "Renault", country: "France", category: "Vehicle" },
+  // Food & Beverage
+  { company: "Nestlé", country: "Switzerland", category: "Food & Beverage" },
+  { company: "Coca-Cola", country: "USA", category: "Food & Beverage" },
+  { company: "Unilever", country: "United Kingdom", category: "Food & Beverage" },
+  { company: "Danone", country: "France", category: "Food & Beverage" },
+  { company: "Ferrero", country: "Italy", category: "Food & Beverage" },
+  { company: "Amul", country: "India", category: "Food & Beverage" },
+  { company: "Red Bull", country: "Austria", category: "Food & Beverage" },
+  // Fashion & Apparel
+  { company: "Nike", country: "USA", category: "Fashion & Apparel" },
+  { company: "Adidas", country: "Germany", category: "Fashion & Apparel" },
+  { company: "Zara", country: "Spain", category: "Fashion & Apparel" },
+  { company: "H&M", country: "Sweden", category: "Fashion & Apparel" },
+  { company: "Gucci", country: "Italy", category: "Fashion & Apparel" },
+  { company: "Louis Vuitton", country: "France", category: "Fashion & Apparel" },
+  { company: "Uniqlo", country: "Japan", category: "Fashion & Apparel" },
+  { company: "Rolex", country: "Switzerland", category: "Fashion & Apparel" },
+  // Electronics & Home
+  { company: "LG", country: "South Korea", category: "Electronics" },
+  { company: "Panasonic", country: "Japan", category: "Electronics" },
+  { company: "Philips", country: "Netherlands", category: "Electronics" },
+  { company: "Bosch", country: "Germany", category: "Electronics" },
+  { company: "Haier", country: "China", category: "Electronics" },
+  { company: "IKEA", country: "Sweden", category: "Electronics" },
+  { company: "Lego", country: "Denmark", category: "Electronics" },
+];
+
+function generateCompanyCountryOptions(correct) {
+  const allCountries = companyOriginData.map((s) => s.country);
+  const options = new Set([correct]);
+  const pool = shuffleArray(allCountries.filter((c) => c !== correct));
+  for (const c of pool) {
+    if (options.size >= 4) break;
+    options.add(c);
+  }
+  return shuffleArray(Array.from(options));
+}
+
+// Extend quizGames with companyOrigin
+Object.assign(quizGames, {
+  companyOrigin: {
+    key: "companyOrigin",
+    title: "Company Origins",
+    bigLetter: "🏭",
+    intro: "Which country is this famous company from?",
+    rules: "<1s = 12pts · <2s = 8pts · <3s = 4pts · wrong = over",
+    reference: "35+ companies across Tech, Vehicles, Food, Fashion, and Electronics.",
+    accent: "#f43f5e", // Rose
+    timeLimit: 3000,
+    prompt: "Origin of",
+    subtext: "Pick the correct country of origin",
+    cardBadge: "Business GK",
+    cardTitle: "Company Origins",
+    cardDescription: "Match famous global companies to their home countries.",
+    getScorePoints: (elapsedSec, timeLimitMs) => {
+      const third = (timeLimitMs || 3000) / 3000;
+      if (elapsedSec < third) return 12;
+      if (elapsedSec < third * 2) return 8;
+      return 4;
+    },
+    generateQuestion: () => {
+      const item = companyOriginData[Math.floor(Math.random() * companyOriginData.length)];
+      return {
+        // We can prepend the category to the prompt for more context
+        display: `${item.company} (${item.category})`,
+        correctValue: item.country,
+        options: generateCompanyCountryOptions(item.country),
+      };
+    },
+  },
+});

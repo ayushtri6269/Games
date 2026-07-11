@@ -38,6 +38,7 @@ import ScientificNameQuiz from "./pages/ScientificNameQuiz";
 import StateDanceQuiz from "./pages/StateDanceQuiz";
 import OrganizationHqQuiz from "./pages/OrganizationHqQuiz";
 import InventionQuiz from "./pages/InventionQuiz";
+import CompanyOriginQuiz from "./pages/CompanyOriginQuiz";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import Leaderboard from "./pages/Leaderboard";
@@ -381,6 +382,20 @@ const GAME_MODES = [
     accent: "#fbbf24",
     summary: "Inventor of...",
     details: "Match world-changing inventions to their creators.",
+  },
+  {
+    id: "companyOrigin",
+    path: "/company-origin",
+    title: "Company Origins Quiz",
+    badge: "Business GK",
+    category: "General Knowledge",
+    hero: "🏭",
+    intro: "Which country is this famous company from?",
+    rules: "<1s = 12pts · <2s = 8pts · <3s = 4pts · wrong = over",
+    reference: "35+ companies across Tech, Vehicles, Food, Fashion, and Electronics.",
+    accent: "#f43f5e",
+    summary: "Origin of...",
+    details: "Match famous global companies to their home countries.",
   },
 ];
 
@@ -1192,6 +1207,7 @@ function ArcadeLayout() {
           <Route path="/state-dance" element={<StateDanceQuiz />} />
           <Route path="/organization-hq" element={<OrganizationHqQuiz />} />
           <Route path="/inventions" element={<InventionQuiz />} />
+          <Route path="/company-origin" element={<CompanyOriginQuiz />} />
 
           <Route
             path="/indian-vice-president"

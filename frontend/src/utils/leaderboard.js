@@ -76,6 +76,7 @@ export const MODE_LABELS = {
   stateDance: 'State & Dance',
   orgHq: 'Org & HQ',
   invention: 'Inventions',
+  companyOrigin: 'Company Origins',
 };
 
 export const DIFF_LABELS = {
