@@ -40,14 +40,20 @@ export default function TestPage() {
   };
 
   const categories = useMemo(() => {
-    return Object.keys(dataModules).map(path => {
-      const id = path.split('/').pop().replace('.json', '');
-      return {
-        id,
-        path,
-        displayName: formatDisplayName(id)
-      };
-    });
+    return Object.keys(dataModules)
+      .map(path => {
+        const id = path.split('/').pop().replace('.json', '');
+        return {
+          id,
+          path,
+          displayName: formatDisplayName(id)
+        };
+      })
+      .filter(category => {
+        // Exclude datasets that don't have multiple-choice questions
+        const excludedIds = ['hr-questions', 'interview-guides', 'challenges'];
+        return !excludedIds.includes(category.id.toLowerCase());
+      });
   }, []);
 
   const handleSelectCategory = async (category, mode) => {
@@ -83,34 +89,25 @@ export default function TestPage() {
         <div className="p-4 flex flex-col sm:flex-row justify-between items-center gap-4 border-b border-slate-700 bg-[#0f172a] sticky top-0 z-20">
           <button 
             onClick={handleBack}
-            className="text-white hover:text-gray-300 font-bold px-4 py-2 rounded-lg bg-slate-800 w-full sm:w-auto text-center"
+            className="text-white hover:text-gray-300 font-bold px-4 py-2 rounded-lg bg-slate-800 w-full sm:w-auto text-center shrink-0"
           >
             ← Back to Exams
           </button>
           
-          <div className="flex flex-wrap justify-center gap-2 w-full sm:w-auto">
-            <button
-              className={`px-4 py-2 rounded-lg font-bold transition-colors flex-1 sm:flex-none ${quizMode === 'practice' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-300'}`}
-              onClick={() => setQuizMode('practice')}
-            >
-              📝 Practice
-            </button>
-            <button
-              className={`px-4 py-2 rounded-lg font-bold transition-colors flex-1 sm:flex-none ${quizMode === 'test' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-300'}`}
-              onClick={() => setQuizMode('test')}
-            >
-              🎯 Test
-            </button>
+          <div className="flex-1 flex justify-end items-center gap-4 w-full sm:w-auto">
+            <h2 className="text-lg sm:text-xl font-black text-white/90 tracking-wide text-center sm:text-right w-full sm:w-auto">
+              {formatDisplayName(selectedCategory)} {quizMode === 'test' ? 'Exam' : 'Practice'}
+            </h2>
+            
+            {quizMode === 'test' && !testConfig.active && (
+              <button 
+                className="bg-green-600 hover:bg-green-700 text-white font-bold px-4 py-2 rounded-lg shrink-0"
+                onClick={() => setTestConfig({ active: true, duration: quizData.length, timeRemaining: quizData.length * 60 })}
+              >
+                ▶ Start Exam
+              </button>
+            )}
           </div>
-          
-          {quizMode === 'test' && !testConfig.active && (
-            <button 
-              className="bg-green-600 hover:bg-green-700 text-white font-bold px-4 py-2 rounded-lg w-full sm:w-auto mt-2 sm:mt-0"
-              onClick={() => setTestConfig({ active: true, duration: 30, timeRemaining: 1800 })}
-            >
-              ▶ Start Exam
-            </button>
-          )}
         </div>
         
         {/* Render the QuizFeed component from New folder */}
